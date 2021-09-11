@@ -53,7 +53,7 @@
 
       // FeatureGroup is to store editable layers
      var drawnItems = new L.FeatureGroup();
-     //map.addLayer(drawnItems);
+     map.addLayer(drawnItems);
 
      map.on('draw:created', function (e) {
           var type = e.layerType,
@@ -64,7 +64,8 @@
           }
 
           // Do whatever else you need to. (save to db, add to map etc)
-          map.addLayer(layer);
+          //map.addLayer(layer);
+          drawnItems.addLayer(layer);
       });
 
      var drawControl = new L.Control.Draw({
