@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title>Leaflet.js Map</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <link rel="stylesheet" href="mapControl.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+        <link rel="stylesheet" href="https://unpkg.com/native-toast@2.0.0/dist/native-toast.css">
+        <style>
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            html, body, #map {
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map">
+
+        </div>
+
+        <script src="https://unpkg.com/native-toast@2.0.0/dist/native-toast.min.js"></script>
+        <script src="nativeToast.js"></script>
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+        <script src="Leaflet.draw-develop\src\draw\handler\Draw.Polygon.js"></script>
+        <script src="https://unpkg.com/osmtogeojson@2.2.12/osmtogeojson.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.js"></script>
+        <script src="usStatesData.js"></script>
+        
+
+        <script>
+
+            var map = L.map('map',{zoomControl: false}).setView([25.320021, 82.973564], 12);
+            
+            var OSMLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            //Add layer control
+            var layerControl = L.control({position: 'bottomleft'});
+
+            layerControl.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'layers'); // create a div with a class "info"
+                return this._div;
+            };
+            
+            // method that we will use to update the control based on feature properties passed
+            layerControl.addLayer = function (layer,layerName) {
+                this._div.innerHTML += ('<table cellpadding="2" cellspacing="0" id="'+ layer._leaflet_id +'"><thead></thead><tbody><tr><td><h6>'+ layerName +'</h6></td><td><a href="#" onclick="showToast('+String(layerName)+')"><img src="images/svg/trash.svg" width=13></img></a></td><td><img src="images/svg/eye.svg" width=13 onClick="toggleVisibility('+ layer +')"></img></td><td><img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></td></tr></tbody></table>'); 
+            };
+            
+            layerControl.addTo(map);
+            layerControl.addLayer(OSMLayer,"OSM Standard");
+
+            var geojsonLayer = new L.GeoJSON.AJAX("school_points.geojson");       
+            geojsonLayer.addTo(map);
+            layerControl.addLayer(geojsonLayer,"School Points");
+        </script>
+    </body>
+</html>

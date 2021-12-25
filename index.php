@@ -50,26 +50,40 @@ header('Access-Control-Allow-Origin: *');
 
     <script>
       var map = L.map('map').setView([25.320021, 82.973564], 12);
-      L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      var OSMLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
-      // FeatureGroup is to store editable layers
+      var baseMaps = {
+        "OSM Standard": OSMLayer
+      };
+      var overLays = {};
+      var layerControl = L.control.layers(baseMaps, overLays, { collapsed: false, position: 'bottomleft'}).addTo(map);
+
+     // FeatureGroup is to store editable layers
      var drawnItems = new L.FeatureGroup();
      map.addLayer(drawnItems);
 
      map.on('draw:created', function (e) {
           var type = e.layerType,
               layer = e.layer;
-
+          var vectorLayer = {};
           if (type === 'marker') {
-              // Do marker specific actions
+              vectorLayer = {
+                "Marker": layer
+              };
+          }
+          else {
+            vectorLayer = {
+              "Polygon": layer
+            };  
           }
 
           // Do whatever else you need to. (save to db, add to map etc)
           //map.addLayer(layer);
           drawnItems.addLayer(layer);
+          layerControl.addOverlay(layer,type);
       });
 
      var drawControl = new L.Control.Draw({
@@ -78,6 +92,22 @@ header('Access-Control-Allow-Origin: *');
          }
      });
      map.addControl(drawControl);
+
+     // control that shows state info on hover
+	var info = L.control();
+
+  info.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info');
+    this.update();
+    return this._div;
+  };
+
+  info.update = function (props) {
+    this._div.innerHTML = '<h4>US Population Density</h4>' +  (props ?
+      '<b>' + props.name + '</b><br />' + props.density + ' people / mi<sup>2</sup>' : 'Hover over a state');
+  };
+
+  info.addTo(map);
 
       function buildOverpassApiUrl(map, overpassQuery) {
         var bounds = map.getBounds().getSouth() + ',' + map.getBounds().getWest() + ',' + map.getBounds().getNorth() + ',' + map.getBounds().getEast();
@@ -121,19 +151,6 @@ header('Access-Control-Allow-Origin: *');
             }
           }).addTo(map);
         });
-      });
-
-      var schoolPoints = new L.geoJson();
-      schoolPoints.addTo(map);
-
-      $.ajax({
-      dataType: "json",
-      url: "s3://cloudgis/school_points.geojson",
-      success: function(data) {
-          $(data).each(function(key, data) {
-              schoolPoints.addData(data);
-          });
-      }
       });
 
     </script>
