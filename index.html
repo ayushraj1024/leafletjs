@@ -35,7 +35,7 @@
         
 
         <script>
-
+            var layerIndex = 0;
             var map = L.map('map',{zoomControl: false}).setView([25.320021, 82.973564], 12);
             
             var OSMLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -43,17 +43,30 @@
                 attribution: '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
+            //Add Title
+            var mapTitle = L.control({position: 'topleft'});
+
+            mapTitle.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'mapTitle');
+                this._div.innerHTML = ('<h1>MNNIT(2020GI07) Cloud GIS</h1>'); // create a div with a class "layers"
+                return this._div;
+            };
+            mapTitle.addTo(map);
+
             //Add layer control
             var layerControl = L.control({position: 'bottomleft'});
 
             layerControl.onAdd = function (map) {
-                this._div = L.DomUtil.create('div', 'layers'); // create a div with a class "info"
+                this._div = L.DomUtil.create('div', 'layers'); // create a div with a class "layers"
                 return this._div;
             };
             
-            // method that we will use to update the control based on feature properties passed
             layerControl.addLayer = function (layer,layerName) {
-                this._div.innerHTML += ('<table cellpadding="2" cellspacing="0" id="'+ layer._leaflet_id +'"><thead></thead><tbody><tr><td><h6>'+ layerName +'</h6></td><td><a href="#" onclick="showToast('+String(layerName)+')"><img src="images/svg/trash.svg" width=13></img></a></td><td><img src="images/svg/eye.svg" width=13 onClick="toggleVisibility('+ layer +')"></img></td><td><img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></td></tr></tbody></table>'); 
+                var currentLayer = this;
+                (function (_layerIndex) {
+                    currentLayer._div.innerHTML += ('<div class="layer_elements"><p>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<img src="images/svg/eye.svg" width=13 onClick="toggleVisibility('+ layer +')"></img>&nbsp;<img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></p></div>');
+                })(layerIndex);
+                layerIndex++;
             };
             
             layerControl.addTo(map);
@@ -62,6 +75,17 @@
             var geojsonLayer = new L.GeoJSON.AJAX("school_points.geojson");       
             geojsonLayer.addTo(map);
             layerControl.addLayer(geojsonLayer,"School Points");
+
+            for(i = 0; i < layerIndex; i++) {
+                deleteButton = document.getElementById(i+"_delete");
+                if (typeof window.addEventListener === 'function'){
+                    (function (_deleteButton) {
+                        deleteButton.addEventListener('click', function(){
+                            console.log(_deleteButton);
+                        });
+                    })(deleteButton);
+                }
+            }
         </script>
     </body>
 </html>
