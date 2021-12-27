@@ -31,10 +31,12 @@
         <script src="https://unpkg.com/osmtogeojson@2.2.12/osmtogeojson.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.js"></script>
+        <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
         <script src="usStatesData.js"></script>
         
 
         <script>
+            var layerList = [];
             var layerIndex = 0;
             var map = L.map('map',{zoomControl: false}).setView([25.320021, 82.973564], 12);
             
@@ -64,12 +66,24 @@
             layerControl.addLayer = function (layer,layerName) {
                 var currentLayer = this;
                 (function (_layerIndex) {
-                    currentLayer._div.innerHTML += ('<div class="layer_elements"><p>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<img src="images/svg/eye.svg" width=13 onClick="toggleVisibility('+ layer +')"></img>&nbsp;<img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></p></div>');
+                    currentLayer._div.innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<img src="images/svg/eye.svg" width=13 onClick="toggleVisibility('+ layer +')"></img>&nbsp;<img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></b></p></div>');
                 })(layerIndex);
                 layerIndex++;
+                layerList.push(layer);
+                console.log(layerList);
             };
             
             layerControl.addTo(map);
+            //Add layer adding button
+            var layerElements = document.getElementsByClassName("layers");
+            var layerAddingButton = document.createElement("button");
+            layerAddingButton.setAttribute("id","layer_adding_button");
+            layerAddingButton.innerHTML = "+";
+            layerElements[0].appendChild(layerAddingButton);
+            document.getElementById("layer_adding_button").addEventListener('click',function() {
+                console.log("You added a layer");
+            });
+
             layerControl.addLayer(OSMLayer,"OSM Standard");
 
             var geojsonLayer = new L.GeoJSON.AJAX("school_points.geojson");       
@@ -79,11 +93,27 @@
             for(i = 0; i < layerIndex; i++) {
                 deleteButton = document.getElementById(i+"_delete");
                 if (typeof window.addEventListener === 'function'){
-                    (function (_deleteButton) {
+                    (function (_deleteButton,_i) {
                         deleteButton.addEventListener('click', function(){
-                            console.log(_deleteButton);
+                            swal({
+                                title: "Are you sure you want to delete this layer?",
+                                icon: "warning",
+                                buttons: true,
+                                dangerMode: true,
+                                })
+                                .then((willDelete) => {
+                                if (willDelete) {
+                                    map.removeLayer(layerList[_i]);
+                                    var layer = document.getElementById(_i+"_layer").remove();
+                                    swal("Layer has been deleted", {
+                                    icon: "success",
+                                    });
+                                } else {
+                                    swal("Layer has not been deleted");
+                                }
+                            });
                         });
-                    })(deleteButton);
+                    })(deleteButton,i);
                 }
             }
         </script>
