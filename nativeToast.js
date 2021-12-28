@@ -1,7 +1,7 @@
 function showToast(message) {
 nativeToast({
     message: message,
-    position: 'north',    
+    position: 'northeast',    
     rounded: true,
     timeout: 2000,
     type: 'none',

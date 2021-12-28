@@ -56,3 +56,20 @@
 .layer_elements {
     padding: 2px;
 }
+#map-wrapper {
+    width: 100%;
+    height: 500px;
+    position: relative;
+    border: 1px solid black;
+}
+#button-wrapper {
+    position: absolute;
+    bottom: 10px;
+    left: 200;
+    width: 100%;
+    border: 1px solid red;
+}
+#map {
+    width: 100%;
+    height: 100%;
+}

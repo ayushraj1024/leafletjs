@@ -19,10 +19,6 @@
         </style>
     </head>
     <body>
-        <div id="map">
-
-        </div>
-
         <script src="https://unpkg.com/native-toast@2.0.0/dist/native-toast.min.js"></script>
         <script src="nativeToast.js"></script>
         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -34,6 +30,19 @@
         <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
         <script src="usStatesData.js"></script>
         
+        
+        <input style="margin-left: 10px;" type="button" id="Btn1" value="Add New Layer" onclick="showToast('You added a layer');" class="btnStyle span3"/>
+        <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
+        <input type="button" id="Btn3" value="Save" class="btnStyle span3"/>
+        <input type="button" id="Btn4" value="Close" class="btnStyle span3"/>
+            
+        <div id="map"></div>
+          
+        <!--<div id="map">
+            <div class="leaflet-top leaflet-right">
+                <input type="button" id="Btn1" value="Btn1" onclick="console.log('You added a layer')" class="btnStyle span3" />
+            </div>
+        </div>-->
 
         <script>
             var layerList = [];
@@ -74,15 +83,6 @@
             };
             
             layerControl.addTo(map);
-            //Add layer adding button
-            var layerElements = document.getElementsByClassName("layers");
-            var layerAddingButton = document.createElement("button");
-            layerAddingButton.setAttribute("id","layer_adding_button");
-            layerAddingButton.innerHTML = "+";
-            layerElements[0].appendChild(layerAddingButton);
-            document.getElementById("layer_adding_button").addEventListener('click',function() {
-                console.log("You added a layer");
-            });
 
             layerControl.addLayer(OSMLayer,"OSM Standard");
 
