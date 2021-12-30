@@ -86,7 +86,7 @@
 
             layerControl.addLayer(OSMLayer,"OSM Standard");
 
-            var geojsonLayer = new L.GeoJSON.AJAX("school_points.geojson");       
+            var geojsonLayer = new L.GeoJSON.AJAX("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=50&outputFormat=application%2Fjson");       
             geojsonLayer.addTo(map);
             layerControl.addLayer(geojsonLayer,"School Points");
 
