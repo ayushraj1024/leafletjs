@@ -19,17 +19,19 @@
         </style>
     </head>
     <body>
+        <script>L_PREFER_CANVAS = true;</script>
         <script src="https://unpkg.com/native-toast@2.0.0/dist/native-toast.min.js"></script>
         <script src="nativeToast.js"></script>
         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
         <script src="Leaflet.draw-develop\src\draw\handler\Draw.Polygon.js"></script>
         <script src="https://unpkg.com/osmtogeojson@2.2.12/osmtogeojson.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.js"></script>
         <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+        <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
         <script src="usStatesData.js"></script>
-        
         
         <input style="margin-left: 10px;" type="button" id="Btn1" value="Add New Layer" onclick="showToast('You added a layer');" class="btnStyle span3"/>
         <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
@@ -37,17 +39,11 @@
         <input type="button" id="Btn4" value="Close" class="btnStyle span3"/>
             
         <div id="map"></div>
-          
-        <!--<div id="map">
-            <div class="leaflet-top leaflet-right">
-                <input type="button" id="Btn1" value="Btn1" onclick="console.log('You added a layer')" class="btnStyle span3" />
-            </div>
-        </div>-->
 
         <script>
             var layerList = [];
             var layerIndex = 0;
-            var map = L.map('map',{zoomControl: false}).setView([25.320021, 82.973564], 12);
+            var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
             
             var OSMLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -84,10 +80,81 @@
             
             layerControl.addTo(map);
 
-            layerControl.addLayer(OSMLayer,"OSM Standard");
+            /*var MyLayer = L.CanvasLayer.extend({
+                render: function() {
+                    var canvas = this.getCanvas();
+                    var ctx = canvas.getContext('2d');
+                    // render
+                }
+            });
 
-            var geojsonLayer = new L.GeoJSON.AJAX("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson");       
-            geojsonLayer.addTo(map);
+
+            // create and add to the map
+            var layer = new MyLayer();
+            layer.addTo(map);*/
+
+            layerControl.addLayer(OSMLayer,"OSM Standard");
+            var markerClusterGroup = L.markerClusterGroup();
+            var geojsonLayer;
+            $.getJSON("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson")
+                .then(function (data) {
+                    var ratIcon = L.icon({
+                        iconUrl: 'images/point.png',
+                        iconSize: [5, 5]
+                    });
+                    geojsonLayer = L.geoJson(data, {
+                        pointToLayer: function (feature, latlng) {
+                            var marker = L.circleMarker(latlng,{radius:2});
+                            //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
+                            return marker;
+                        }
+                    }).addTo(map);
+                })
+                .fail(function(err){
+                    console.log(err.responseText)
+                });
+                /*var vectorGrid = L.vectorGrid.slicer( euCountries, {
+			rendererFactory: L.svg.tile,
+			vectorTileLayerStyles: {
+				sliced: function(properties, zoom) {
+					var p = properties.mapcolor7 % 5;
+					return {
+						fillColor: p === 0 ? '#800026' :
+								p === 1 ? '#E31A1C' :
+								p === 2 ? '#FEB24C' :
+								p === 3 ? '#B2FE4C' : '#FFEDA0',
+						fillOpacity: 0.5,
+	 					//fillOpacity: 1,
+						stroke: true,
+						fill: true,
+						color: 'black',
+ 							//opacity: 0.2,
+						weight: 0,
+					}
+				}
+			},
+			interactive: true,
+			getFeatureId: function(f) {
+				return f.properties.wb_a3;
+			}
+		})
+		.addTo(map);*/
+                //markerClusterGroup.addTo(map);
+               
+            //geojson = L.geoJson("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson", {style: style,onEachFeature: onEachFeature}).addTo(map);
+            //var geojsonLayer = new L.GeoJSON.AJAX("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson");       
+            /*my_json = L.geoJson(geojsonLayer, {
+                pointToLayer: function (feature, latlng) {
+                    var smallIcon = new L.Icon({
+                        iconSize: [20, 20],
+                        iconAnchor: [13, 27],
+                        popupAnchor: [1, -24],
+                        iconUrl: 'images/point.png'
+                    });
+                    return L.marker(latlng, {icon: smallIcon});
+                }
+            });
+            my_json.addTo(map);*/
             layerControl.addLayer(geojsonLayer,"School Points");
 
             for(i = 0; i < layerIndex; i++) {

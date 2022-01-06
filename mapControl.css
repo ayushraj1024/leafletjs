@@ -35,7 +35,7 @@
     max-height:400px;
     width:max-content;
     position:absolute;
-    bottom:0;
+    bottom:20px;
 }
 .layers h4 {
     margin: 0 0 5px;
