@@ -72,12 +72,51 @@
             //Add layer control
             var layerButtonControl = L.control({position: 'topleft'});
 
+            function showLayerAddingDialog() {
+                document.getElementById("layeraddingdialogid").style.display = "block";
+            }
+
+            function hideLayerAddingDialog() {
+                document.getElementById("layeraddingdialogid").style.display = "none";
+            }
+
+            function showProcessingToolbox() {
+                document.getElementById("processingtoolboxid").style.display = "block";
+            }
+
+            function hideProcessingToolbox() {
+                document.getElementById("processingtoolboxid").style.display = "none";
+            }
+            
             layerButtonControl.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'mapbuttons'); // create a div with a class "layers"
-                this._div.innerHTML = "<a href='#' class='maplinks'><h4 class='mapbutton'><b>Add New Layer</b></h4></a>&nbsp;&nbsp;<a href='#' class='maplinks'><h4 class='mapbutton'><b>Processing Toolbox</b></h4></a>";
+                this._div.innerHTML = "<a href='#' class='maplinks' onclick='showLayerAddingDialog();'><h4 class='mapbutton'><b>Add New Layer</b></h4></a>&nbsp;&nbsp;<a href='#' class='maplinks'><h4 class='mapbutton' onclick='showProcessingToolbox();'><b>Processing Toolbox</b></h4></a>";
                 return this._div;
             };
             layerButtonControl.addTo(map);
+
+
+            //Add layer adding dialog box
+            var layerAddingDialogBox = L.control({position: 'topright'});
+
+            layerAddingDialogBox.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'layeraddingdialog');
+                this._div.id = "layeraddingdialogid";
+                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4><li>Varanasi School Points Data</li><li>Varanasi Village Boundary</li><li>Varanasi Road Network</li>";
+                return this._div;
+            };
+            layerAddingDialogBox.addTo(map);
+
+            //Add processing toolbox
+            var layerAddingDialogBox = L.control({position: 'topright'});
+
+            layerAddingDialogBox.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'processingtoolbox');
+                this._div.id = "processingtoolboxid";
+                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>";
+                return this._div;
+            };
+            layerAddingDialogBox.addTo(map);
 
             //Add layer control
             var layerControl = L.control({position: 'bottomleft'});
@@ -141,8 +180,10 @@
                                 if (willDelete) {
                                     map.removeLayer(layerList[_i]);
                                     console.log(featureList[_i]);
-                                    for(index=0;index < featureList[_i].length;index++) {
-                                        map.removeLayer(featureList[_i][index]);
+                                    if(featureList[_i] != null) {
+                                        for(index=0;index < featureList[_i].length;index++) {
+                                            map.removeLayer(featureList[_i][index]);
+                                        }
                                     }
                                     var layer = document.getElementById(_i+"_layer").remove();
                                     swal("Layer has been deleted", {
