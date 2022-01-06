@@ -32,6 +32,7 @@
         <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
         <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
         <script src="usStatesData.js"></script>
+        <script src="addLayer.js"></script>
         
         <input style="margin-left: 10px;" type="button" id="Btn1" value="Add New Layer" onclick="showToast('You added a layer');" class="btnStyle span3"/>
         <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
@@ -43,12 +44,15 @@
         <script>
             var layerList = [];
             var layerIndex = 0;
+            var featureList = [];
+
             var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
             
             var OSMLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
+            featureList.push(null);
 
             //Add Title
             var mapTitle = L.control({position: 'topleft'});
@@ -77,86 +81,36 @@
                 layerList.push(layer);
                 console.log(layerList);
             };
-            
+
             layerControl.addTo(map);
-
-            /*var MyLayer = L.CanvasLayer.extend({
-                render: function() {
-                    var canvas = this.getCanvas();
-                    var ctx = canvas.getContext('2d');
-                    // render
-                }
-            });
-
-
-            // create and add to the map
-            var layer = new MyLayer();
-            layer.addTo(map);*/
-
             layerControl.addLayer(OSMLayer,"OSM Standard");
-            var markerClusterGroup = L.markerClusterGroup();
-            var geojsonLayer;
-            $.getJSON("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson")
-                .then(function (data) {
-                    var ratIcon = L.icon({
-                        iconUrl: 'images/point.png',
-                        iconSize: [5, 5]
-                    });
-                    geojsonLayer = L.geoJson(data, {
-                        pointToLayer: function (feature, latlng) {
-                            var marker = L.circleMarker(latlng,{radius:2});
-                            //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
-                            return marker;
-                        }
-                    }).addTo(map);
-                })
-                .fail(function(err){
-                    console.log(err.responseText)
+
+            async function addWFSLayerFromSDI(url,map) {
+                var geojsonLayer;      
+                var markers = [];
+                await $.getJSON(url)
+                    .then(function (data) {
+                        geojsonLayer = L.geoJson(data, {
+                            pointToLayer: function (feature, latlng) {
+                                var marker = L.circleMarker(latlng,{radius:2});
+                                //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
+                                markers.push(marker);
+                                return marker;
+                            }
+                        }).addTo(map);
+                    })
+                    .fail(function(err){
+                        console.log(err.responseText)
                 });
-                /*var vectorGrid = L.vectorGrid.slicer( euCountries, {
-			rendererFactory: L.svg.tile,
-			vectorTileLayerStyles: {
-				sliced: function(properties, zoom) {
-					var p = properties.mapcolor7 % 5;
-					return {
-						fillColor: p === 0 ? '#800026' :
-								p === 1 ? '#E31A1C' :
-								p === 2 ? '#FEB24C' :
-								p === 3 ? '#B2FE4C' : '#FFEDA0',
-						fillOpacity: 0.5,
-	 					//fillOpacity: 1,
-						stroke: true,
-						fill: true,
-						color: 'black',
- 							//opacity: 0.2,
-						weight: 0,
-					}
-				}
-			},
-			interactive: true,
-			getFeatureId: function(f) {
-				return f.properties.wb_a3;
-			}
-		})
-		.addTo(map);*/
-                //markerClusterGroup.addTo(map);
-               
-            //geojson = L.geoJson("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson", {style: style,onEachFeature: onEachFeature}).addTo(map);
-            //var geojsonLayer = new L.GeoJSON.AJAX("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson");       
-            /*my_json = L.geoJson(geojsonLayer, {
-                pointToLayer: function (feature, latlng) {
-                    var smallIcon = new L.Icon({
-                        iconSize: [20, 20],
-                        iconAnchor: [13, 27],
-                        popupAnchor: [1, -24],
-                        iconUrl: 'images/point.png'
-                    });
-                    return L.marker(latlng, {icon: smallIcon});
-                }
-            });
-            my_json.addTo(map);*/
+                featureList.push(markers);
+                return geojsonLayer;
+            }
+        
+            var geojsonLayer = addWFSLayerFromSDI("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson",map);
+
             layerControl.addLayer(geojsonLayer,"School Points");
 
+            
             for(i = 0; i < layerIndex; i++) {
                 deleteButton = document.getElementById(i+"_delete");
                 if (typeof window.addEventListener === 'function'){
@@ -171,18 +125,21 @@
                                 .then((willDelete) => {
                                 if (willDelete) {
                                     map.removeLayer(layerList[_i]);
+                                    console.log(featureList[_i]);
+                                    for(index=0;index < featureList[_i].length;index++) {
+                                        map.removeLayer(featureList[_i][index]);
+                                    }
                                     var layer = document.getElementById(_i+"_layer").remove();
                                     swal("Layer has been deleted", {
                                     icon: "success",
                                     });
-                                } else {
-                                    swal("Layer has not been deleted");
                                 }
                             });
                         });
                     })(deleteButton,i);
                 }
             }
+            
         </script>
     </body>
 </html>
