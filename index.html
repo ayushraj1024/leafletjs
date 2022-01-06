@@ -102,21 +102,21 @@
             layerAddingDialogBox.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'layeraddingdialog');
                 this._div.id = "layeraddingdialogid";
-                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4><li>Varanasi School Points Data</li><li>Varanasi Village Boundary</li><li>Varanasi Road Network</li>";
+                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4><a href='#' onclick='addPointLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\")'><li>Varanasi School Points Data</li></a><a href='#' onclick='addPolygonLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'><li>Varanasi Village Boundary</li></a><a href='#' onclick='addLineLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'><li>Varanasi Road Network</a></li>";
                 return this._div;
             };
             layerAddingDialogBox.addTo(map);
 
             //Add processing toolbox
-            var layerAddingDialogBox = L.control({position: 'topright'});
+            var processingToolbox = L.control({position: 'topright'});
 
-            layerAddingDialogBox.onAdd = function (map) {
+            processingToolbox.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'processingtoolbox');
                 this._div.id = "processingtoolboxid";
                 this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>";
                 return this._div;
             };
-            layerAddingDialogBox.addTo(map);
+            processingToolbox.addTo(map);
 
             //Add layer control
             var layerControl = L.control({position: 'bottomleft'});
@@ -139,7 +139,7 @@
             layerControl.addTo(map);
             layerControl.addLayer(OSMLayer,"OSM Standard");
 
-            async function addWFSLayerFromSDI(url,map) {
+            /*async function addWFSLayerFromSDI(url) {
                 var geojsonLayer;      
                 var markers = [];
                 await $.getJSON(url)
@@ -160,41 +160,122 @@
                 return geojsonLayer;
             }
         
-            var geojsonLayer = addWFSLayerFromSDI("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson",map);
+            var geojsonLayer = addWFSLayerFromSDI("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson");
 
-            layerControl.addLayer(geojsonLayer,"School Points");
+            layerControl.addLayer(geojsonLayer,"School Points");*/
 
-            
-            for(i = 0; i < layerIndex; i++) {
-                deleteButton = document.getElementById(i+"_delete");
-                if (typeof window.addEventListener === 'function'){
-                    (function (_deleteButton,_i) {
-                        deleteButton.addEventListener('click', function(){
-                            swal({
-                                title: "Are you sure you want to delete this layer?",
-                                icon: "warning",
-                                buttons: true,
-                                dangerMode: true,
-                                })
-                                .then((willDelete) => {
-                                if (willDelete) {
-                                    map.removeLayer(layerList[_i]);
-                                    console.log(featureList[_i]);
-                                    if(featureList[_i] != null) {
-                                        for(index=0;index < featureList[_i].length;index++) {
-                                            map.removeLayer(featureList[_i][index]);
-                                        }
-                                    }
-                                    var layer = document.getElementById(_i+"_layer").remove();
-                                    swal("Layer has been deleted", {
-                                    icon: "success",
-                                    });
-                                }
-                            });
-                        });
-                    })(deleteButton,i);
-                }
+            async function addPointLayerFromSDI(url) {
+                var geojsonLayer;      
+                var markers = [];
+                await $.getJSON(url)
+                    .then(function (data) {
+                        geojsonLayer = L.geoJson(data, {
+                            pointToLayer: function (feature, latlng) {
+                                var marker = L.circleMarker(latlng,{radius:2});
+                                //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
+                                markers.push(marker);
+                                return marker;
+                            }
+                        }).addTo(map);
+                    })
+                    .fail(function(err){
+                        console.log(err.responseText)
+                });
+                featureList.push(markers);
+
+                await layerControl.addLayer(geojsonLayer,"Points");
+                addOnClickListenersToLayers();
             }
+
+            async function addPolygonLayerFromSDI(url) {
+                var geojsonLayer;      
+                var polygons = [];
+                await $.getJSON(url)
+                    .then(function (data) {
+                        geojsonLayer = L.geoJson(data, {
+                            /*pointToLayer: function (feature, latlng) {
+                                var marker = L.circleMarker(latlng,{radius:2});
+                                //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
+                                markers.push(marker);
+                                return marker;
+                            }*/
+                        }).addTo(map);
+                    })
+                    .fail(function(err){
+                        console.log(err.responseText)
+                });
+                featureList.push(null);
+
+                await layerControl.addLayer(geojsonLayer,"Polygons");
+                addOnClickListenersToLayers();
+            }
+
+            async function addLineLayerFromSDI(url) {
+                var geojsonLayer;      
+                var lines = [];
+                await $.getJSON(url)
+                    .then(function (data) {
+                        geojsonLayer = L.geoJson(data, {
+                            /*pointToLayer: function (feature, latlng) {
+                                var marker = L.circleMarker(latlng,{radius:2});
+                                //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
+                                markers.push(marker);
+                                return marker;
+                            }*/
+                        }).addTo(map);
+                    })
+                    .fail(function(err){
+                        console.log(err.responseText)
+                });
+                featureList.push(null);
+
+                await layerControl.addLayer(geojsonLayer,"Lines");
+                addOnClickListenersToLayers();
+            }
+
+            function addOnClickListenersToLayers() {
+                for(i = 0; i <= layerIndex; i++) {
+                    deleteButton = document.getElementById(i+"_delete");
+                    if (typeof window.addEventListener === 'function'){
+                        (function (_deleteButton,_i) {
+                            try {
+                                deleteButton.addEventListener('click', function(){
+                                    swal({
+                                        title: "Are you sure you want to delete this layer?",
+                                        icon: "warning",
+                                        buttons: true,
+                                        dangerMode: true,
+                                        })
+                                        .then((willDelete) => {
+                                        if (willDelete) {
+                                            map.removeLayer(layerList[_i]);
+                                            console.log(featureList[_i]);
+                                            if(featureList[_i] != null) {
+                                                for(index=0;index < featureList[_i].length;index++) {
+                                                    map.removeLayer(featureList[_i][index]);
+                                                    //featureList[_i].splice(index,1);
+                                                }
+                                            }
+                                            //featureList.splice(_i,1);
+                                            //layerList.splice(_i,1);
+                                            //layerIndex--;
+                                            var layer = document.getElementById(_i+"_layer").remove();
+                                            addOnClickListenersToLayers();
+                                            swal("Layer has been deleted", {
+                                            icon: "success",
+                                            });
+                                        }
+                                    });
+                                });
+                        } catch(err) {
+                            console.log(err);
+                        }
+                        })(deleteButton,i);
+                    }
+                }
+        }
+
+        addOnClickListenersToLayers();
             
         </script>
     </body>
