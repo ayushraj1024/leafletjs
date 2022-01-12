@@ -50,14 +50,24 @@
             var layerList = [];
             var layerIndex = 0;
             var featureList = [];
+            var toggleList = [];
+            var layerNameList = [];
+            var layerOrderList = [];
 
             var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
 
+            map.createPane((layerIndex+"_layer"));
+            map.getPane((layerIndex+"_layer")).style.zIndex = (200*layerIndex);
             var OSMLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
+                pane: (layerIndex+"_layer"),
                 attribution: '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
+            layerList.push(OSMLayer);
+            layerNameList.push("OSM Standard");
             featureList.push(null);
+            toggleList.push(1);
+            layerOrderList.push(200*layerIndex);
 
             //Add Title
             var mapTitle = L.control({position: 'topleft'});
@@ -129,16 +139,18 @@
             layerControl.addLayer = function (layer,layerName) {
                 var currentLayer = this;
                 (function (_layerIndex) {
-                    currentLayer._div.innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<img src="images/svg/eye.svg" width=13 onClick="toggleVisibility('+ layer +')"></img>&nbsp;<img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></b></p></div>');
+                    currentLayer._div.innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex+"_toggle"+'" src="images/svg/eye.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_up" src="images/svg/arrow_up.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_down" src="images/svg/arrow_down.svg" width=13 ></img></a>&nbsp;<img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></b></p></div>');
                 })(layerIndex);
-                layerIndex++;
+                /*layerIndex++;
                 layerList.push(layer);
+                toggleList.push(1);
+                layerNameList.push(layerName);*/
                 console.log(layerList);
             };
 
             layerControl.addTo(map);
             layerControl.addLayer(OSMLayer,"OSM Standard");
-
+            layerIndex++;
             /*async function addWFSLayerFromSDI(url) {
                 var geojsonLayer;      
                 var markers = [];
@@ -169,21 +181,28 @@
                 var markers = [];
                 await $.getJSON(url)
                     .then(function (data) {
+                        map.createPane((layerIndex+"_layer"));
+                        map.getPane((layerIndex+"_layer")).style.zIndex = (200*layerIndex);
                         geojsonLayer = L.geoJson(data, {
                             pointToLayer: function (feature, latlng) {
-                                var marker = L.circleMarker(latlng,{radius:2});
+                                var marker = L.circleMarker(latlng,{radius:2,color: "#FF0000",});
                                 //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
                                 markers.push(marker);
                                 return marker;
-                            }
+                            },
+                            pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
                     .fail(function(err){
                         console.log(err.responseText)
                 });
                 featureList.push(markers);
-
+                layerList.push(geojsonLayer);
+                toggleList.push(1);
+                layerNameList.push("Points");
+                layerOrderList.push(200*layerIndex);
                 await layerControl.addLayer(geojsonLayer,"Points");
+                layerIndex++;
                 addOnClickListenersToLayers();
             }
 
@@ -192,6 +211,8 @@
                 var polygons = [];
                 await $.getJSON(url)
                     .then(function (data) {
+                        map.createPane((layerIndex+"_layer"));
+                        map.getPane((layerIndex+"_layer")).style.zIndex = (200*layerIndex);
                         geojsonLayer = L.geoJson(data, {
                             /*pointToLayer: function (feature, latlng) {
                                 var marker = L.circleMarker(latlng,{radius:2});
@@ -199,14 +220,19 @@
                                 markers.push(marker);
                                 return marker;
                             }*/
+                            pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
                     .fail(function(err){
                         console.log(err.responseText)
                 });
                 featureList.push(null);
-
+                layerList.push(geojsonLayer);
+                toggleList.push(1);
+                layerNameList.push("Polygons");
+                layerOrderList.push(200*layerIndex);
                 await layerControl.addLayer(geojsonLayer,"Polygons");
+                layerIndex++;
                 addOnClickListenersToLayers();
             }
 
@@ -215,6 +241,8 @@
                 var lines = [];
                 await $.getJSON(url)
                     .then(function (data) {
+                        map.createPane((layerIndex+"_layer"));
+                        map.getPane((layerIndex+"_layer")).style.zIndex = (200*layerIndex);
                         geojsonLayer = L.geoJson(data, {
                             /*pointToLayer: function (feature, latlng) {
                                 var marker = L.circleMarker(latlng,{radius:2});
@@ -222,23 +250,97 @@
                                 markers.push(marker);
                                 return marker;
                             }*/
+                            pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
                     .fail(function(err){
                         console.log(err.responseText)
                 });
                 featureList.push(null);
-
+                layerList.push(geojsonLayer);
+                toggleList.push(1);
+                layerNameList.push("Lines");
+                layerOrderList.push(200*layerIndex);
                 await layerControl.addLayer(geojsonLayer,"Lines");
+                layerIndex++;
                 addOnClickListenersToLayers();
             }
 
             function addOnClickListenersToLayers() {
                 for(i = 0; i <= layerIndex; i++) {
                     deleteButton = document.getElementById(i+"_delete");
+                    toggleButton = document.getElementById(i+"_toggle");
+                    upButton = document.getElementById(i+"_up");
+                    downButton = document.getElementById(i+"_down");
                     if (typeof window.addEventListener === 'function'){
-                        (function (_deleteButton,_i) {
+                        (function (_deleteButton,_toggleButton,_i) {
                             try {
+                                upButton.addEventListener('click', function(){
+                                    var zIndexOfCurrentLayer = map.getPane((_i+"_layer")).style.zIndex;
+                                    var indexOfUpperLayer;
+                                    var zIndexOfUpperLayer;
+                                    var higherIndexFound = false;
+                                    for (let j = 0; j < layerOrderList.length; j++) {
+                                        if(layerOrderList[j] > zIndexOfCurrentLayer) {
+                                            indexOfUpperLayer = j;
+                                            zIndexOfUpperLayer = layerOrderList[j];
+                                            higherIndexFound = true;
+                                            break;
+                                        } 
+                                    }
+                                    indexOfUpperLayer = layerOrderList.indexOf(zIndexOfUpperLayer);
+                                    console.log("Z Index Of Current Layer: "+zIndexOfCurrentLayer);
+                                    console.log("Z Index Of Upper Layer: "+zIndexOfUpperLayer);
+                                    console.log("Index of current layer: "+_i);
+                                    console.log("Index of upper layer: "+indexOfUpperLayer);
+                                    if(higherIndexFound) {
+                                        
+                                        map.getPane((_i+"_layer")).style.zIndex = zIndexOfUpperLayer;
+                                        map.getPane(((indexOfUpperLayer)+"_layer")).style.zIndex = zIndexOfCurrentLayer;
+
+                                        innerHTML1 = document.getElementById(_i+"_layer").innerHTML;
+                                        console.log("Inner HTML 1: "+innerHTML1);
+
+                                        innerHTML2 = document.getElementById((indexOfUpperLayer)+"_layer").innerHTML;
+                                        console.log("Inner HTML 2: "+innerHTML2);
+
+                                        document.getElementById(_i+"_layer").innerHTML = innerHTML2;
+                                        document.getElementById((indexOfUpperLayer)+"_layer").innerHTML = innerHTML1;
+
+                                        layerOrderList[(_i)] = zIndexOfUpperLayer;
+                                        layerOrderList[(indexOfUpperLayer)] = zIndexOfCurrentLayer;
+
+                                        addOnClickListenersToLayers();
+                                        console.log("Layer moved up");
+
+                                    }
+                                    
+                                });
+                                downButton.addEventListener('click', function(){
+                                    console.log("Layer moved down");
+                                });
+                                toggleButton.addEventListener('click', function(){
+                                    if(toggleList[_i] == 1) {
+                                        map.removeLayer(layerList[_i]);
+                                        _toggleButton.setAttribute('src',"images/svg/eye-off.svg");
+                                        if(featureList[_i] != null) {
+                                            for(index=0;index < featureList[_i].length;index++) {
+                                                    map.removeLayer(featureList[_i][index]);
+                                                }
+                                        }
+                                        toggleList[_i] = 0;
+                                    } else if(toggleList[_i] == 0) {
+                                        layerList[_i].addTo(map);
+                                        _toggleButton.setAttribute('src',"images/svg/eye.svg");
+                                        if(featureList[_i] != null) {
+                                            for(index=0;index < featureList[_i].length;index++) {
+                                                featureList[_i][index].addTo(map);
+                                                }
+                                        }
+                                        toggleList[_i] = 1;
+                                    }
+                                    console.log("Layer Visibility Toggled");
+                                });
                                 deleteButton.addEventListener('click', function(){
                                     swal({
                                         title: "Are you sure you want to delete this layer?",
@@ -248,19 +350,22 @@
                                         })
                                         .then((willDelete) => {
                                         if (willDelete) {
-                                            map.removeLayer(layerList[_i]);
-                                            console.log(featureList[_i]);
-                                            if(featureList[_i] != null) {
-                                                for(index=0;index < featureList[_i].length;index++) {
-                                                    map.removeLayer(featureList[_i][index]);
-                                                    //featureList[_i].splice(index,1);
+                                            if(toggleList[_i] == 1) {
+                                                map.removeLayer(layerList[_i]);
+                                                layerOrderList[(_i)] = ((-1)*(_i));
+                                                console.log(featureList[_i]);
+                                                if(featureList[_i] != null) {
+                                                    for(index=0;index < featureList[_i].length;index++) {
+                                                        map.removeLayer(featureList[_i][index]);
+                                                        //featureList[_i].splice(index,1);
+                                                    }
                                                 }
                                             }
                                             //featureList.splice(_i,1);
                                             //layerList.splice(_i,1);
                                             //layerIndex--;
                                             var layer = document.getElementById(_i+"_layer").remove();
-                                            addOnClickListenersToLayers();
+                                            //addOnClickListenersToLayers();
                                             swal("Layer has been deleted", {
                                             icon: "success",
                                             });
@@ -270,9 +375,16 @@
                         } catch(err) {
                             console.log(err);
                         }
-                        })(deleteButton,i);
+                        })(deleteButton,toggleButton,i);
                     }
                 }
+        }
+
+        async function addAllLayersToMapAndUI() {
+            map.eachLayer(function (layer) {
+                map.removeLayer(layer);
+            });
+            
         }
 
         addOnClickListenersToLayers();
