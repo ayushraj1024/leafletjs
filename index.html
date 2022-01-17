@@ -38,6 +38,7 @@
         <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
         <script src="node_modules/leaflet-dialog/Leaflet.Dialog.js"></script>
         <script src="node_modules/leaflet-notifications/js/leaflet-notifications.js"></script>
+        <script src="outTurf.js"></script>
         <!--<input style="margin-left: 10px;" type="button" id="Btn1" value="Add New Layer" onclick="showToast('You added a layer');" class="btnStyle span3"/>
         <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
         <input type="button" id="Btn3" value="Save" class="btnStyle span3"/>
@@ -53,11 +54,12 @@
             var toggleList = [];
             var layerNameList = [];
             var layerOrderList = [];
+            var layerMultiplier = 1200;
 
             var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
 
             map.createPane((layerIndex+"_layer"));
-            map.getPane((layerIndex+"_layer")).style.zIndex = (200*layerIndex);
+            map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
             var OSMLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 pane: (layerIndex+"_layer"),
@@ -67,7 +69,7 @@
             layerNameList.push("OSM Standard");
             featureList.push(null);
             toggleList.push(1);
-            layerOrderList.push(200*layerIndex);
+            layerOrderList.push(layerIndex*layerMultiplier);
 
             //Add Title
             var mapTitle = L.control({position: 'topleft'});
@@ -141,40 +143,12 @@
                 (function (_layerIndex) {
                     currentLayer._div.innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex+"_toggle"+'" src="images/svg/eye.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_up" src="images/svg/arrow_up.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_down" src="images/svg/arrow_down.svg" width=13 ></img></a>&nbsp;<img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></b></p></div>');
                 })(layerIndex);
-                /*layerIndex++;
-                layerList.push(layer);
-                toggleList.push(1);
-                layerNameList.push(layerName);*/
                 console.log(layerList);
             };
 
             layerControl.addTo(map);
             layerControl.addLayer(OSMLayer,"OSM Standard");
             layerIndex++;
-            /*async function addWFSLayerFromSDI(url) {
-                var geojsonLayer;      
-                var markers = [];
-                await $.getJSON(url)
-                    .then(function (data) {
-                        geojsonLayer = L.geoJson(data, {
-                            pointToLayer: function (feature, latlng) {
-                                var marker = L.circleMarker(latlng,{radius:2});
-                                //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
-                                markers.push(marker);
-                                return marker;
-                            }
-                        }).addTo(map);
-                    })
-                    .fail(function(err){
-                        console.log(err.responseText)
-                });
-                featureList.push(markers);
-                return geojsonLayer;
-            }
-        
-            var geojsonLayer = addWFSLayerFromSDI("http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson");
-
-            layerControl.addLayer(geojsonLayer,"School Points");*/
 
             async function addPointLayerFromSDI(url) {
                 var geojsonLayer;      
@@ -182,10 +156,10 @@
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
-                        map.getPane((layerIndex+"_layer")).style.zIndex = (200*layerIndex);
+                        map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
                         geojsonLayer = L.geoJson(data, {
                             pointToLayer: function (feature, latlng) {
-                                var marker = L.circleMarker(latlng,{radius:2,color: "#FF0000",});
+                                var marker = L.circleMarker(latlng,{pane: (layerIndex+"_layer"), radius:2,color: "#FF0000",});
                                 //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
                                 markers.push(marker);
                                 return marker;
@@ -200,7 +174,7 @@
                 layerList.push(geojsonLayer);
                 toggleList.push(1);
                 layerNameList.push("Points");
-                layerOrderList.push(200*layerIndex);
+                layerOrderList.push(layerIndex*layerMultiplier);
                 await layerControl.addLayer(geojsonLayer,"Points");
                 layerIndex++;
                 addOnClickListenersToLayers();
@@ -212,14 +186,9 @@
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
-                        map.getPane((layerIndex+"_layer")).style.zIndex = (200*layerIndex);
+                        map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
                         geojsonLayer = L.geoJson(data, {
-                            /*pointToLayer: function (feature, latlng) {
-                                var marker = L.circleMarker(latlng,{radius:2});
-                                //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
-                                markers.push(marker);
-                                return marker;
-                            }*/
+                            
                             pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
@@ -230,7 +199,7 @@
                 layerList.push(geojsonLayer);
                 toggleList.push(1);
                 layerNameList.push("Polygons");
-                layerOrderList.push(200*layerIndex);
+                layerOrderList.push(layerIndex*layerMultiplier);
                 await layerControl.addLayer(geojsonLayer,"Polygons");
                 layerIndex++;
                 addOnClickListenersToLayers();
@@ -242,14 +211,9 @@
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
-                        map.getPane((layerIndex+"_layer")).style.zIndex = (200*layerIndex);
+                        map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
                         geojsonLayer = L.geoJson(data, {
-                            /*pointToLayer: function (feature, latlng) {
-                                var marker = L.circleMarker(latlng,{radius:2});
-                                //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
-                                markers.push(marker);
-                                return marker;
-                            }*/
+                           
                             pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
@@ -260,7 +224,7 @@
                 layerList.push(geojsonLayer);
                 toggleList.push(1);
                 layerNameList.push("Lines");
-                layerOrderList.push(200*layerIndex);
+                layerOrderList.push(layerIndex*layerMultiplier);
                 await layerControl.addLayer(geojsonLayer,"Lines");
                 layerIndex++;
                 addOnClickListenersToLayers();
@@ -273,22 +237,33 @@
                     upButton = document.getElementById(i+"_up");
                     downButton = document.getElementById(i+"_down");
                     if (typeof window.addEventListener === 'function'){
-                        (function (_deleteButton,_toggleButton,_i) {
+                        (function (_deleteButton,_toggleButton,_upButton,_downButton,_i) {
                             try {
-                                upButton.addEventListener('click', function(){
+                                _upButton.addEventListener('click', function(){
+                                    console.log(_i+"_layer");
                                     var zIndexOfCurrentLayer = map.getPane((_i+"_layer")).style.zIndex;
                                     var indexOfUpperLayer;
                                     var zIndexOfUpperLayer;
                                     var higherIndexFound = false;
+                                    var allUpperOrderIndices = [];
                                     for (let j = 0; j < layerOrderList.length; j++) {
                                         if(layerOrderList[j] > zIndexOfCurrentLayer) {
-                                            indexOfUpperLayer = j;
-                                            zIndexOfUpperLayer = layerOrderList[j];
-                                            higherIndexFound = true;
-                                            break;
+                                            allUpperOrderIndices.push(j);
                                         } 
                                     }
-                                    indexOfUpperLayer = layerOrderList.indexOf(zIndexOfUpperLayer);
+                                    var min = layerOrderList[allUpperOrderIndices[(allUpperOrderIndices.length-1)]];
+                                    console.log("Value of all upper order indices array is: "+allUpperOrderIndices.length);
+                                    for(let k = 0; k < allUpperOrderIndices.length; k++) {
+                                        console.log(layerOrderList[allUpperOrderIndices[k]]);
+                                        if(layerOrderList[allUpperOrderIndices[k]] <= min) {
+                                            min = layerOrderList[allUpperOrderIndices[k]];
+                                            higherIndexFound = true;
+                                            console.log("Higher index is: "+min);
+                                        }
+                                    }
+                                    indexOfUpperLayer = layerOrderList.indexOf(min);
+                                    zIndexOfUpperLayer = min;
+                                    //indexOfUpperLayer = layerOrderList.indexOf(zIndexOfUpperLayer);
                                     console.log("Z Index Of Current Layer: "+zIndexOfCurrentLayer);
                                     console.log("Z Index Of Upper Layer: "+zIndexOfUpperLayer);
                                     console.log("Index of current layer: "+_i);
@@ -306,9 +281,26 @@
 
                                         document.getElementById(_i+"_layer").innerHTML = innerHTML2;
                                         document.getElementById((indexOfUpperLayer)+"_layer").innerHTML = innerHTML1;
+                                        
+                                        var currentLayerDOM = document.getElementById(_i+"_layer");
+                                        var upperLayerDOM = document.getElementById((indexOfUpperLayer)+"_layer")
+                                        
+                                        currentLayerDOM.setAttribute("id",(indexOfUpperLayer+"_layer"));
+                                        upperLayerDOM.setAttribute("id",(_i+"_layer"));
 
                                         layerOrderList[(_i)] = zIndexOfUpperLayer;
                                         layerOrderList[(indexOfUpperLayer)] = zIndexOfCurrentLayer;
+
+                                        for(let l = 0; l < layerIndex; l++){
+                                           var lDeleteButton = document.getElementById(l+"_delete");
+                                           var lToggleButton = document.getElementById(l+"_toggle");
+                                           var lUpButton = document.getElementById(l+"_up");
+                                           var lDownButton = document.getElementById(l+"_down");
+                                           lDeleteButton.replaceWith(lDeleteButton.cloneNode(true));
+                                           lToggleButton.replaceWith(lToggleButton.cloneNode(true));
+                                           lUpButton.replaceWith(lUpButton.cloneNode(true));
+                                           lDownButton.replaceWith(lDownButton.cloneNode(true));
+                                        }
 
                                         addOnClickListenersToLayers();
                                         console.log("Layer moved up");
@@ -316,10 +308,76 @@
                                     }
                                     
                                 });
-                                downButton.addEventListener('click', function(){
-                                    console.log("Layer moved down");
+                                _downButton.addEventListener('click', function(){
+                                    console.log(_i+"_layer");
+                                    var zIndexOfCurrentLayer = map.getPane((_i+"_layer")).style.zIndex;
+                                    var indexOfLowerLayer;
+                                    var zIndexOfLowerLayer;
+                                    var lowerIndexFound = false;
+                                    var allLowerOrderIndices = [];
+                                    for (let j = 0; j < layerOrderList.length; j++) {
+                                        if(layerOrderList[j] < zIndexOfCurrentLayer) {
+                                            allLowerOrderIndices.push(j);
+                                        } 
+                                    }
+                                    var max = -1;
+                                    console.log("Value of all lower order indices array is: "+allLowerOrderIndices.length);
+                                    for(let k = 0; k < allLowerOrderIndices.length; k++) {
+                                        console.log(layerOrderList[allLowerOrderIndices[k]]);
+                                        if(layerOrderList[allLowerOrderIndices[k]] > max) {
+                                            max = layerOrderList[allLowerOrderIndices[k]];
+                                            lowerIndexFound = true;
+                                            console.log("Lower index is: "+max);
+                                        }
+                                    }
+                                    indexOfLowerLayer = layerOrderList.indexOf(max);
+                                    zIndexOfLowerLayer = max;
+                                    //indexOfLowerLayer = layerOrderList.indexOf(zIndexOfLowerLayer);
+                                    console.log("Z Index Of Current Layer: "+zIndexOfCurrentLayer);
+                                    console.log("Z Index Of Lower Layer: "+zIndexOfLowerLayer);
+                                    console.log("Index of current layer: "+_i);
+                                    console.log("Index of lower layer: "+indexOfLowerLayer);
+                                    if(lowerIndexFound) {
+                                        
+                                        map.getPane((_i+"_layer")).style.zIndex = zIndexOfLowerLayer;
+                                        map.getPane(((indexOfLowerLayer)+"_layer")).style.zIndex = zIndexOfCurrentLayer;
+
+                                        innerHTML1 = document.getElementById(_i+"_layer").innerHTML;
+                                        console.log("Inner HTML 1: "+innerHTML1);
+
+                                        innerHTML2 = document.getElementById((indexOfLowerLayer)+"_layer").innerHTML;
+                                        console.log("Inner HTML 2: "+innerHTML2);
+
+                                        document.getElementById(_i+"_layer").innerHTML = innerHTML2;
+                                        document.getElementById((indexOfLowerLayer)+"_layer").innerHTML = innerHTML1;
+                                        
+                                        var currentLayerDOM = document.getElementById(_i+"_layer");
+                                        var lowerLayerDOM = document.getElementById((indexOfLowerLayer)+"_layer");
+                                        
+                                        currentLayerDOM.setAttribute("id",(indexOfLowerLayer+"_layer"));
+                                        lowerLayerDOM.setAttribute("id",(_i+"_layer"));
+
+                                        layerOrderList[(_i)] = zIndexOfLowerLayer;
+                                        layerOrderList[(indexOfLowerLayer)] = zIndexOfCurrentLayer;
+
+                                        for(let l = 0; l < layerIndex; l++){
+                                           var lDeleteButton = document.getElementById(l+"_delete");
+                                           var lToggleButton = document.getElementById(l+"_toggle");
+                                           var lUpButton = document.getElementById(l+"_up");
+                                           var lDownButton = document.getElementById(l+"_down");
+                                           lDeleteButton.replaceWith(lDeleteButton.cloneNode(true));
+                                           lToggleButton.replaceWith(lToggleButton.cloneNode(true));
+                                           lUpButton.replaceWith(lUpButton.cloneNode(true));
+                                           lDownButton.replaceWith(lDownButton.cloneNode(true));
+                                        }
+
+                                        addOnClickListenersToLayers();
+                                        console.log("Layer moved down");
+
+                                    }
+                                 
                                 });
-                                toggleButton.addEventListener('click', function(){
+                                _toggleButton.addEventListener('click', function(){
                                     if(toggleList[_i] == 1) {
                                         map.removeLayer(layerList[_i]);
                                         _toggleButton.setAttribute('src',"images/svg/eye-off.svg");
@@ -341,7 +399,7 @@
                                     }
                                     console.log("Layer Visibility Toggled");
                                 });
-                                deleteButton.addEventListener('click', function(){
+                                _deleteButton.addEventListener('click', function(){
                                     swal({
                                         title: "Are you sure you want to delete this layer?",
                                         icon: "warning",
@@ -375,7 +433,7 @@
                         } catch(err) {
                             console.log(err);
                         }
-                        })(deleteButton,toggleButton,i);
+                        })(deleteButton,toggleButton,upButton,downButton,i);
                     }
                 }
         }
