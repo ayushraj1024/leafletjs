@@ -55,6 +55,7 @@
             var layerNameList = [];
             var layerOrderList = [];
             var layerMultiplier = 1200;
+            var attributeList = [];
 
             var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
 
@@ -68,6 +69,7 @@
             layerList.push(OSMLayer);
             layerNameList.push("OSM Standard");
             featureList.push(null);
+            attributeList.push(null);
             toggleList.push(1);
             layerOrderList.push(layerIndex*layerMultiplier);
 
@@ -83,6 +85,7 @@
 
             //Add layer control
             var layerButtonControl = L.control({position: 'topleft'});
+            var attributeTable = L.control({position: 'topleft'});
 
             function showLayerAddingDialog() {
                 document.getElementById("layeraddingdialogid").style.display = "block";
@@ -98,6 +101,11 @@
 
             function hideProcessingToolbox() {
                 document.getElementById("processingtoolboxid").style.display = "none";
+            }
+
+            function hideAttributeTableDialog() {
+                document.getElementById("attributetabledialogid").style.display = "none";
+                attributeTable.removeFrom(map);
             }
             
             layerButtonControl.onAdd = function (map) {
@@ -141,7 +149,7 @@
             layerControl.addLayer = function (layer,layerName) {
                 var currentLayer = this;
                 (function (_layerIndex) {
-                    currentLayer._div.innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex+"_toggle"+'" src="images/svg/eye.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_up" src="images/svg/arrow_up.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_down" src="images/svg/arrow_down.svg" width=13 ></img></a>&nbsp;<img src="images/svg/save.svg" width=13 onClick="saveLayer('+ layer +')"></img></b></p></div>');
+                    currentLayer._div.innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex+"_toggle"+'" src="images/svg/eye.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_up" src="images/svg/arrow_up.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_down" src="images/svg/arrow_down.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_attributetable" src="images/svg/table.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex + '_save" src="images/svg/save.svg" width=13></img></a></b></p></div>');
                 })(layerIndex);
                 console.log(layerList);
             };
@@ -153,6 +161,7 @@
             async function addPointLayerFromSDI(url) {
                 var geojsonLayer;      
                 var markers = [];
+                var attributes = [];
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
@@ -160,9 +169,22 @@
                         geojsonLayer = L.geoJson(data, {
                             pointToLayer: function (feature, latlng) {
                                 var marker = L.circleMarker(latlng,{pane: (layerIndex+"_layer"), radius:2,color: "#FF0000",});
-                                //marker.bindPopup(feature.properties.Location + '<br/>' + feature.properties.OPEN_DT);
+                                var popupContent = "";
+                                for (const property in feature.properties) {
+                                    popupContent = popupContent + "<br>" + `<b>${property}</b>: ${feature.properties[property]}`;
+                                }
+                                var featurePane = map.createPane((layerIndex+"_layer_feature"));
+                                featurePane.style.zIndex = (layerIndex*layerMultiplier+100);
+                                marker.bindPopup(popupContent,{pane: featurePane});
                                 markers.push(marker);
+                                attributes.push(feature);
                                 return marker;
+                            },
+                            onEachFeature: function (feature, layer) {
+                                /*for (const property in feature.properties) {
+                                    console.log(`${property}: ${feature.properties[property]}`);
+                                }*/
+                                //console.log(feature.properties);
                             },
                             pane: (layerIndex+"_layer")
                         }).addTo(map);
@@ -172,6 +194,7 @@
                 });
                 featureList.push(markers);
                 layerList.push(geojsonLayer);
+                attributeList.push(attributes);
                 toggleList.push(1);
                 layerNameList.push("Points");
                 layerOrderList.push(layerIndex*layerMultiplier);
@@ -183,12 +206,22 @@
             async function addPolygonLayerFromSDI(url) {
                 var geojsonLayer;      
                 var polygons = [];
+                var attributes = [];
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
                         map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
                         geojsonLayer = L.geoJson(data, {
-                            
+                            onEachFeature: function (feature, layer) {
+                                var popupContent = "";
+                                for (const property in feature.properties) {
+                                    popupContent = popupContent + "<br>" + `<b>${property}</b>: ${feature.properties[property]}`;
+                                }
+                                var featurePane = map.createPane((layerIndex+"_layer_feature"));
+                                featurePane.style.zIndex = (layerIndex*layerMultiplier+100);
+                                layer.bindPopup(popupContent,{pane: featurePane});
+                                attributes.push(feature);
+                            },
                             pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
@@ -197,6 +230,7 @@
                 });
                 featureList.push(null);
                 layerList.push(geojsonLayer);
+                attributeList.push(attributes);
                 toggleList.push(1);
                 layerNameList.push("Polygons");
                 layerOrderList.push(layerIndex*layerMultiplier);
@@ -208,12 +242,22 @@
             async function addLineLayerFromSDI(url) {
                 var geojsonLayer;      
                 var lines = [];
+                var attributes = [];
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
                         map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
                         geojsonLayer = L.geoJson(data, {
-                           
+                            onEachFeature: function (feature,layer) {
+                                var popupContent = "";
+                                for (const property in feature.properties) {
+                                    popupContent = popupContent + "<br>" + `<b>${property}</b>: ${feature.properties[property]}`;
+                                }
+                                var featurePane = map.createPane((layerIndex+"_layer_feature"));
+                                featurePane.style.zIndex = (layerIndex*layerMultiplier+100);
+                                attributes.push(feature);
+                                layer.bindPopup(popupContent,{pane: featurePane});
+                            },
                             pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
@@ -222,6 +266,7 @@
                 });
                 featureList.push(null);
                 layerList.push(geojsonLayer);
+                attributeList.push(attributes);
                 toggleList.push(1);
                 layerNameList.push("Lines");
                 layerOrderList.push(layerIndex*layerMultiplier);
@@ -230,15 +275,67 @@
                 addOnClickListenersToLayers();
             }
 
+            function download(content, fileName, contentType) {
+                var a = document.createElement("a");
+                var file = new Blob([content], {type: contentType});
+                a.href = URL.createObjectURL(file);
+                a.download = fileName;
+                a.click();
+            }
+
             function addOnClickListenersToLayers() {
                 for(i = 0; i <= layerIndex; i++) {
                     deleteButton = document.getElementById(i+"_delete");
                     toggleButton = document.getElementById(i+"_toggle");
                     upButton = document.getElementById(i+"_up");
                     downButton = document.getElementById(i+"_down");
+                    attributeTableButton = document.getElementById(i+"_attributetable");
+                    saveButton = document.getElementById(i+"_save");
                     if (typeof window.addEventListener === 'function'){
-                        (function (_deleteButton,_toggleButton,_upButton,_downButton,_i) {
+                        (function (_deleteButton,_toggleButton,_upButton,_downButton,_attributeTableButton,_saveButton,_i) {
                             try {
+                                _attributeTableButton.addEventListener('click',function(){
+                                   
+                                    attributeTable.onAdd = function (map) {
+                                        this._div = L.DomUtil.create('div', 'attributetabledialog');
+                                        this._div.id = "attributetabledialogid";
+                                        if(attributeList[_i] == null) {
+                                            this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideAttributeTableDialog();'>Close</a><br><h3>Attribute Table</h3><h4>The chosen layer has the following attribute data:</h4>No Attributes";
+                                        } else {
+                                            var k;
+                                            var table = "<table><thead><tr>";
+                                            for (const property in attributeList[_i][0].properties) {
+                                                table = table + "<th>" + `${property}`+ "</th>";
+                                            }
+                                            table = table + "</tr></thead><tbody>";
+                                            for(k = 0; k < attributeList[_i].length; k++) {
+                                                table = table + "<tr>";
+                                                for (const property in attributeList[_i][k].properties) {
+                                                    table = table + "<td>" + `${attributeList[_i][k].properties[property]}` + "</td>";
+                                                }
+                                                table = table + "</tr>";
+                                            }
+                                            table = table + "</table>";
+                                            this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideAttributeTableDialog();'>Close</a><br><h3>Attribute Table</h3><h4>The chosen layer has the following attribute data:</h4>" + table;
+                                        }
+                                        
+                                        return this._div;
+                                    };
+                                    attributeTable.addTo(map);
+                                    document.getElementById("attributetabledialogid").style.display = "block";
+                                    
+                                });
+                                _saveButton.addEventListener('click',function(){
+                                    if(attributeList[_i] != null) {
+                                        download(JSON.stringify(attributeList[_i]), 'file'+_i+'.geojson', 'text/plain');
+                                    } else {
+                                        swal({
+                                        title: "Support for raster layer downloading coming soon.",
+                                        icon: "warning",
+                                        });
+                                    }
+                                    console.log("save button clicked");
+                                });
                                 _upButton.addEventListener('click', function(){
                                     console.log(_i+"_layer");
                                     var zIndexOfCurrentLayer = map.getPane((_i+"_layer")).style.zIndex;
@@ -433,7 +530,7 @@
                         } catch(err) {
                             console.log(err);
                         }
-                        })(deleteButton,toggleButton,upButton,downButton,i);
+                        })(deleteButton,toggleButton,upButton,downButton,attributeTableButton,saveButton,i);
                     }
                 }
         }
