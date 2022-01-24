@@ -1,6 +1,7 @@
 <html>
     <head>
-        <title>Leaflet.js Map</title>
+        <title>MNNIT Cloud GIS</title>
+        <link rel="icon" type="image/png" href="images/mnnit_logo_square.png">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
@@ -86,6 +87,7 @@
             //Add layer control
             var layerButtonControl = L.control({position: 'topleft'});
             var attributeTable = L.control({position: 'topleft'});
+            var filterInput = L.control({position: 'topleft'});
 
             function showLayerAddingDialog() {
                 document.getElementById("layeraddingdialogid").style.display = "block";
@@ -122,7 +124,14 @@
             layerAddingDialogBox.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'layeraddingdialog');
                 this._div.id = "layeraddingdialogid";
-                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4><a href='#' onclick='addPointLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\")'><li>Varanasi School Points Data</li></a><a href='#' onclick='addPolygonLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'><li>Varanasi Village Boundary</li></a><a href='#' onclick='addLineLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'><li>Varanasi Road Network</a></li>";
+                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4><div class='inline'><a href='#' onclick='addPointLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\")'>Varanasi School Points Data</a>&nbsp;<a href='#' onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\");'><img src='images/svg/copy.svg' height=16 width=auto></img></a></div><br><div class='inline'><a href='#' onclick='addPolygonLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'>Varanasi Village Boundary</a>&nbsp;<a href='#' onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'><img src='images/svg/copy.svg' height=16 width=auto></img></a></div><br><div class='inline'><a href='#' onclick='addLineLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'>Varanasi Road Network</a><a href='#'><img src='images/svg/copy.svg' height=16 width=auto onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'></img></a></div>"
+                + "<br><br><hr><h4>Or enter a custom OGC Webservice URL below:</h4>"
+                + "<textarea type='text' placeholder='Enter OGC URL' id='ogcurl'></textarea>"
+                + "<br><br><input placeholder='Enter a name for this layer' type='text' id='ogcname'/>"
+                + "<h4>And then press one of the below buttons:</h4>"
+                + "<button onclick='getInputValueAndImportPointLayerFromSDI();'>Point Layer</button>&nbsp;<button onclick='getInputValueAndImportLineLayerFromSDI();'>Line Layer</button>&nbsp;<button onclick='getInputValueAndImportPolygonLayerFromSDI();'>Polygon Layer</button>"
+                + "<h5>To learn how to write OGC filters visit this link:</h5>"
+                + "<a href='https://mapserver.gis.umn.edu/nl_NL/ogc/filter_encoding.html'>https://mapserver.gis.umn.edu/nl_NL/ogc/filter_encoding.html</a>";
                 return this._div;
             };
             layerAddingDialogBox.addTo(map);
@@ -158,7 +167,23 @@
             layerControl.addLayer(OSMLayer,"OSM Standard");
             layerIndex++;
 
-            async function addPointLayerFromSDI(url) {
+            function getInputValueAndImportPointLayerFromSDI() {
+                ogcURL = document.getElementById("ogcurl").value;
+                ogcName = document.getElementById("ogcname").value;
+                addPointLayerFromSDI(ogcURL,ogcName);
+            }
+            function getInputValueAndImportPolygonLayerFromSDI() {
+                ogcURL = document.getElementById("ogcurl").value;
+                ogcName = document.getElementById("ogcname").value;
+                addPolygonLayerFromSDI(ogcURL,ogcName);
+            }
+            function getInputValueAndImportLineLayerFromSDI() {
+                ogcURL = document.getElementById("ogcurl").value;
+                ogcName = document.getElementById("ogcname").value;
+                addLineLayerFromSDI(ogcURL,ogcName);
+            }
+
+            async function addPointLayerFromSDI(url,givenLayerName="Points") {
                 var geojsonLayer;      
                 var markers = [];
                 var attributes = [];
@@ -196,14 +221,14 @@
                 layerList.push(geojsonLayer);
                 attributeList.push(attributes);
                 toggleList.push(1);
-                layerNameList.push("Points");
+                layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
-                await layerControl.addLayer(geojsonLayer,"Points");
+                await layerControl.addLayer(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
             }
 
-            async function addPolygonLayerFromSDI(url) {
+            async function addPolygonLayerFromSDI(url,givenLayerName="Polygons") {
                 var geojsonLayer;      
                 var polygons = [];
                 var attributes = [];
@@ -232,14 +257,14 @@
                 layerList.push(geojsonLayer);
                 attributeList.push(attributes);
                 toggleList.push(1);
-                layerNameList.push("Polygons");
+                layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
-                await layerControl.addLayer(geojsonLayer,"Polygons");
+                await layerControl.addLayer(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
             }
 
-            async function addLineLayerFromSDI(url) {
+            async function addLineLayerFromSDI(url,givenLayerName="Lines") {
                 var geojsonLayer;      
                 var lines = [];
                 var attributes = [];
@@ -268,9 +293,9 @@
                 layerList.push(geojsonLayer);
                 attributeList.push(attributes);
                 toggleList.push(1);
-                layerNameList.push("Lines");
+                layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
-                await layerControl.addLayer(geojsonLayer,"Lines");
+                await layerControl.addLayer(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
             }
@@ -322,6 +347,7 @@
                                         return this._div;
                                     };
                                     attributeTable.addTo(map);
+
                                     document.getElementById("attributetabledialogid").style.display = "block";
                                     
                                 });
