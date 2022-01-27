@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
         <link rel="stylesheet" href="https://unpkg.com/native-toast@2.0.0/dist/native-toast.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+        <link rel="stylesheet" href="node_modules/leaflet-loader/leaflet-loader.css"/>
         <script src="https://kit.fontawesome.com/387047fbfe.js" crossorigin="anonymous"></script>
         <style>
             body {
@@ -39,16 +40,17 @@
         <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
         <script src="node_modules/leaflet-dialog/Leaflet.Dialog.js"></script>
         <script src="node_modules/leaflet-notifications/js/leaflet-notifications.js"></script>
-        <script src="outTurf.js"></script>
+        <!--<script src="outTurf.js"></script>-->
+        <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+        <script src='node_modules/leaflet-loader/leaflet-loader.js'></script>
         <!--<input style="margin-left: 10px;" type="button" id="Btn1" value="Add New Layer" onclick="showToast('You added a layer');" class="btnStyle span3"/>
         <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
         <input type="button" id="Btn3" value="Save" class="btnStyle span3"/>
         <input type="button" id="Btn4" value="Close" class="btnStyle span3"/>-->
-  
         <div id="map"></div>
 
         <script>
-
+            
             var layerList = [];
             var layerIndex = 0;
             var featureList = [];
@@ -59,6 +61,11 @@
             var attributeList = [];
 
             var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
+
+            var controlLoader = L.control.loader().addTo(map);
+
+            //controlLoader.show();
+            //controlLoader.hide();
 
             map.createPane((layerIndex+"_layer"));
             map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
@@ -107,7 +114,11 @@
 
             function hideAttributeTableDialog() {
                 document.getElementById("attributetabledialogid").style.display = "none";
-                attributeTable.removeFrom(map);
+                //attributeTable.removeFrom(map);
+            }
+
+            function hideBufferDialog() {
+                document.getElementById("bufferdialog").style.display = "none";
             }
             
             layerButtonControl.onAdd = function (map) {
@@ -124,7 +135,7 @@
             layerAddingDialogBox.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'layeraddingdialog');
                 this._div.id = "layeraddingdialogid";
-                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4><div class='inline'><a href='#' onclick='addPointLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\")'>Varanasi School Points Data</a>&nbsp;<a href='#' onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\");'><img src='images/svg/copy.svg' height=16 width=auto></img></a></div><br><div class='inline'><a href='#' onclick='addPolygonLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'>Varanasi Village Boundary</a>&nbsp;<a href='#' onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'><img src='images/svg/copy.svg' height=16 width=auto></img></a></div><br><div class='inline'><a href='#' onclick='addLineLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'>Varanasi Road Network</a><a href='#'><img src='images/svg/copy.svg' height=16 width=auto onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'></img></a></div>"
+                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4><div class='inline'><a href='#' onclick='addPointLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\")'>Varanasi School Points Data</a>&nbsp;<a href='#' onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\");'><img src='images/svg/copy.svg' height=16 width=auto></img></a></div><br><br><div class='inline'><a href='#' onclick='addPolygonLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'>Varanasi Village Boundary</a>&nbsp;<a href='#' onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'><img src='images/svg/copy.svg' height=16 width=auto></img></a></div><br><br><div class='inline'><a href='#' onclick='addLineLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'>Varanasi Road Network</a><a href='#'><img src='images/svg/copy.svg' height=16 width=auto onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'></img></a></div>"
                 + "<br><br><hr><h4>Or enter a custom OGC Webservice URL below:</h4>"
                 + "<textarea type='text' placeholder='Enter OGC URL' id='ogcurl'></textarea>"
                 + "<br><br><input placeholder='Enter a name for this layer' type='text' id='ogcname'/>"
@@ -142,7 +153,8 @@
             processingToolbox.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'processingtoolbox');
                 this._div.id = "processingtoolboxid";
-                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>";
+                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>"
+                + "<a href='#' onclick='buffer();'>Buffer</a>";
                 return this._div;
             };
             processingToolbox.addTo(map);
@@ -167,6 +179,53 @@
             layerControl.addLayer(OSMLayer,"OSM Standard");
             layerIndex++;
 
+            function buffer() {
+                var bufferDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Selet a point layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                bufferDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'bufferdialog');
+                    this._div.id = "bufferdialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideBufferDialog();'>Close</a>"
+                    + "<br><h3>Buffer</h3>"
+                    + "<h4>Select a point layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br><input type='text' id='bufferLayerName' placeholder='Give a name to this layer'/>"
+                    + "<br><br><button onclick='startBuffer();'>Start Processing</button>";
+                    return this._div;
+                };
+                bufferDialog.addTo(map);
+            }
+
+            function startBuffer() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                var bufferLayerName = document.getElementById('bufferLayerName').value;
+
+                var bufferList = [];
+                for(let i = 0; i < attributeList[selectedLayerId].length; i++) {
+                    //var point = turf.point([attributeList[selectedLayerId][i]["properties"]["longitude"], attributeList[selectedLayerId][i]["properties"]["latitude"]]);
+                    var buffered = turf.buffer(attributeList[selectedLayerId][i], 500, {units: 'meters'});
+                    bufferList.push(buffered);
+                }
+                
+                addPolygonLayerFromOperation(bufferList,bufferLayerName);
+
+            }
+
             function getInputValueAndImportPointLayerFromSDI() {
                 ogcURL = document.getElementById("ogcurl").value;
                 ogcName = document.getElementById("ogcname").value;
@@ -183,10 +242,121 @@
                 addLineLayerFromSDI(ogcURL,ogcName);
             }
 
+            //Funtions for adding layers from operations instead of SDI >>>
+            async function addPointLayerFromOperation(data,givenLayerName="Points") {
+                var geojsonLayer;      
+                var markers = [];
+                var attributes = [];
+                controlLoader.show();
+                map.createPane((layerIndex+"_layer"));
+                map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
+                geojsonLayer = L.geoJson(data, {
+                    pointToLayer: function (feature, latlng) {
+                        var marker = L.circleMarker(latlng,{pane: (layerIndex+"_layer"), radius:2,color: "#FF0000",});
+                        var popupContent = "";
+                        for (const property in feature.properties) {
+                            popupContent = popupContent + "<br>" + `<b>${property}</b>: ${feature.properties[property]}`;
+                        }
+                        var featurePane = map.createPane((layerIndex+"_layer_feature"));
+                        featurePane.style.zIndex = (layerIndex*layerMultiplier+100);
+                        marker.bindPopup(popupContent,{pane: featurePane});
+                        markers.push(marker);
+                        attributes.push(feature);
+                        return marker;
+                    },
+                    onEachFeature: function (feature, layer) {
+                        /*for (const property in feature.properties) {
+                            console.log(`${property}: ${feature.properties[property]}`);
+                        }*/
+                        //console.log(feature.properties);
+                    },
+                    pane: (layerIndex+"_layer")
+                }).addTo(map);
+                    
+                featureList.push(markers);
+                layerList.push(geojsonLayer);
+                attributeList.push(attributes);
+                toggleList.push(1);
+                layerNameList.push(givenLayerName);
+                layerOrderList.push(layerIndex*layerMultiplier);
+                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                layerIndex++;
+                addOnClickListenersToLayers();
+                controlLoader.hide();
+            }
+
+            async function addPolygonLayerFromOperation(data,givenLayerName="Polygons") {
+                var geojsonLayer;      
+                var polygons = [];
+                var attributes = [];
+                controlLoader.show();
+                map.createPane((layerIndex+"_layer"));
+                map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
+                geojsonLayer = L.geoJson(data, {
+                    onEachFeature: function (feature, layer) {
+                        var popupContent = "";
+                        for (const property in feature.properties) {
+                            popupContent = popupContent + "<br>" + `<b>${property}</b>: ${feature.properties[property]}`;
+                        }
+                        var featurePane = map.createPane((layerIndex+"_layer_feature"));
+                        featurePane.style.zIndex = (layerIndex*layerMultiplier+100);
+                        layer.bindPopup(popupContent,{pane: featurePane});
+                        attributes.push(feature);
+                    },
+                    pane: (layerIndex+"_layer")
+                }).addTo(map);
+                    
+                featureList.push(null);
+                layerList.push(geojsonLayer);
+                attributeList.push(attributes);
+                toggleList.push(1);
+                layerNameList.push(givenLayerName);
+                layerOrderList.push(layerIndex*layerMultiplier);
+                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                layerIndex++;
+                addOnClickListenersToLayers();
+                controlLoader.hide();
+            }
+
+            async function addLineLayerFromOperation(data,givenLayerName="Lines") {
+                var geojsonLayer;      
+                var lines = [];
+                var attributes = [];
+                controlLoader.show();
+                map.createPane((layerIndex+"_layer"));
+                map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
+                geojsonLayer = L.geoJson(data, {
+                    onEachFeature: function (feature,layer) {
+                        var popupContent = "";
+                        for (const property in feature.properties) {
+                            popupContent = popupContent + "<br>" + `<b>${property}</b>: ${feature.properties[property]}`;
+                        }
+                        var featurePane = map.createPane((layerIndex+"_layer_feature"));
+                        featurePane.style.zIndex = (layerIndex*layerMultiplier+100);
+                        attributes.push(feature);
+                        layer.bindPopup(popupContent,{pane: featurePane});
+                    },
+                    pane: (layerIndex+"_layer")
+                }).addTo(map);
+                    
+                featureList.push(null);
+                layerList.push(geojsonLayer);
+                attributeList.push(attributes);
+                toggleList.push(1);
+                layerNameList.push(givenLayerName);
+                layerOrderList.push(layerIndex*layerMultiplier);
+                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                layerIndex++;
+                addOnClickListenersToLayers();
+                controlLoader.hide();
+            }
+            //<<< Functions for adding layers from operations instead of SDI
+
             async function addPointLayerFromSDI(url,givenLayerName="Points") {
                 var geojsonLayer;      
                 var markers = [];
                 var attributes = [];
+                controlLoader.show();
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
@@ -226,12 +396,14 @@
                 await layerControl.addLayer(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
+                controlLoader.hide();
             }
 
             async function addPolygonLayerFromSDI(url,givenLayerName="Polygons") {
                 var geojsonLayer;      
                 var polygons = [];
                 var attributes = [];
+                controlLoader.show();
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
@@ -262,12 +434,14 @@
                 await layerControl.addLayer(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
+                controlLoader.hide();
             }
 
             async function addLineLayerFromSDI(url,givenLayerName="Lines") {
                 var geojsonLayer;      
                 var lines = [];
                 var attributes = [];
+                controlLoader.show();
                 await $.getJSON(url)
                     .then(function (data) {
                         map.createPane((layerIndex+"_layer"));
@@ -298,6 +472,7 @@
                 await layerControl.addLayer(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
+                controlLoader.hide();
             }
 
             function download(content, fileName, contentType) {

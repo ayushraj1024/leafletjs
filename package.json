@@ -3,6 +3,7 @@
     "@turf/buffer": "^6.5.0",
     "@turf/collect": "^6.5.0",
     "leaflet-dialog": "^1.0.5",
+    "leaflet-loader": "^0.0.3",
     "leaflet-notifications": "^1.0.7"
   }
 }
