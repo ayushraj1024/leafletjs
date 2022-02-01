@@ -60,6 +60,8 @@
             var layerMultiplier = 1200;
             var attributeList = [];
 
+            var colors = ["#C71585","#A52A2A","#8B008B","#006400","#00FFFF","#FF00FF","#FFE4E1","#2F4F4F","#D2691E","#696969"];
+
             var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
 
             var controlLoader = L.control.loader().addTo(map);
@@ -94,6 +96,7 @@
             //Add layer control
             var layerButtonControl = L.control({position: 'topleft'});
             var attributeTable = L.control({position: 'topleft'});
+            var filterTable = L.control({position: 'topright'});
             var filterInput = L.control({position: 'topleft'});
 
             function showLayerAddingDialog() {
@@ -114,11 +117,16 @@
 
             function hideAttributeTableDialog() {
                 document.getElementById("attributetabledialogid").style.display = "none";
+                document.getElementById("filtertabledialogid").style.display = "none";
                 //attributeTable.removeFrom(map);
             }
 
             function hideBufferDialog() {
                 document.getElementById("bufferdialog").style.display = "none";
+            }
+
+            function hideVoronoiDialog() {
+                document.getElementById("voronoidialog").style.display = "none";
             }
             
             layerButtonControl.onAdd = function (map) {
@@ -154,7 +162,8 @@
                 this._div = L.DomUtil.create('div', 'processingtoolbox');
                 this._div.id = "processingtoolboxid";
                 this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>"
-                + "<a href='#' onclick='buffer();'>Buffer</a>";
+                + "<a href='#' onclick='buffer();'>Buffer</a>"
+                + "<br><a href='#' onclick='voronoi();'>Voronoi Polygons</a>";
                 return this._div;
             };
             processingToolbox.addTo(map);
@@ -172,7 +181,7 @@
                 (function (_layerIndex) {
                     currentLayer._div.innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex+"_toggle"+'" src="images/svg/eye.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_up" src="images/svg/arrow_up.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_down" src="images/svg/arrow_down.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_attributetable" src="images/svg/table.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex + '_save" src="images/svg/save.svg" width=13></img></a></b></p></div>');
                 })(layerIndex);
-                console.log(layerList);
+                //console.log(layerList);
             };
 
             layerControl.addTo(map);
@@ -192,7 +201,7 @@
                             selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
                         //}
                     } catch(err) {
-                        console.log(err);
+                        //console.log(err);
                     }
                 }
                 selectTag = selectTag + "</select>";
@@ -211,6 +220,38 @@
                 bufferDialog.addTo(map);
             }
 
+            function voronoi() {
+                var voronoiDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Selet a point layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                voronoiDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'voronoidialog');
+                    this._div.id = "voronoidialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideVoronoiDialog();'>Close</a>"
+                    + "<br><h3>Voronoi</h3>"
+                    + "<h4>Select a point layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br><input type='text' id='voronoiLayerName' placeholder='Give a name to this layer'/>"
+                    + "<br><br><button onclick='startVoronoi();'>Start Processing</button>";
+                    return this._div;
+                };
+                voronoiDialog.addTo(map);
+            }
+
             function startBuffer() {
                 var selectedLayerId = document.getElementById('layerselect').value;
                 var bufferLayerName = document.getElementById('bufferLayerName').value;
@@ -224,6 +265,65 @@
                 
                 addPolygonLayerFromOperation(bufferList,bufferLayerName);
 
+            }
+
+            function startVoronoi() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                var voronoiLayerName = document.getElementById('voronoiLayerName').value;
+                var pointList = [];
+                var voronoiList = [];
+                for(let i = 0; i < attributeList[selectedLayerId].length; i++) {
+                    point = turf.point([attributeList[selectedLayerId][i]["properties"]["longitude"], attributeList[selectedLayerId][i]["properties"]["latitude"]],{schcd: attributeList[selectedLayerId][i]["properties"]["schcd"]});
+                    pointList.push(point);
+                }
+                var pointFeatures = turf.featureCollection(pointList);
+                //console.log(pointFeatures);
+                voronoiList = attributeList[selectedLayerId][i];
+                //voronoiList.push(attributeList[selectedLayerId][i]);
+                var voronoi = turf.bbox(attributeList[selectedLayerId][i]);
+                addPolygonLayerFromOperation(voronoi,voronoiLayerName);
+
+            }
+
+            function startFilter(indexOfLayer) {
+                //console.log("Filter started: "+indexOfLayer);
+                filterLayerName = document.getElementById('filterlayernameid').value;
+                var layerGeojsonData = [];
+                var k = 0;
+                for(k = 0; k < attributeList[indexOfLayer].length; k++) {
+                    var _allFiltersMatch = true;
+                    for (const property in attributeList[indexOfLayer][k].properties) {
+                        inputValue = document.getElementById(indexOfLayer+"_"+`${property}`).value;
+                        //console.log(indexOfLayer+"_"+`${property}`);
+                        if(inputValue != "") {
+                            //console.log(inputValue);
+                            //console.log(`${attributeList[indexOfLayer][k].properties[property]}`);
+                            if(inputValue != `${attributeList[indexOfLayer][k].properties[property]}`) {
+                                //layerGeojsonData.push(attributeList[indexOfLayer][k]);
+                                _allFiltersMatch = false;
+                                break;
+                            }
+                        }
+                        //console.log(`${property}`+": "+inputValue);
+                    }
+                    if(_allFiltersMatch) {
+                        layerGeojsonData.push(attributeList[indexOfLayer][k]);
+                    }
+                }
+                
+                if(attributeList[indexOfLayer][0]["geometry"]["type"] == "Point") {        
+                    //console.log("Point Layer");
+                    addPointLayerFromOperation(layerGeojsonData,filterLayerName);
+                }
+                if(attributeList[indexOfLayer][0]["geometry"]["type"] == "MultiPolygon") {        
+                    //console.log("MultiPolygon");
+                    addPolygonLayerFromOperation(layerGeojsonData,filterLayerName);
+                }
+                if(attributeList[indexOfLayer][0]["geometry"]["type"] == "MultiLineString") {        
+                    //console.log("MultiLineString");
+                    addLineLayerFromOperation(layerGeojsonData,filterLayerName);
+                }
+                
             }
 
             function getInputValueAndImportPointLayerFromSDI() {
@@ -252,7 +352,7 @@
                 map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
                 geojsonLayer = L.geoJson(data, {
                     pointToLayer: function (feature, latlng) {
-                        var marker = L.circleMarker(latlng,{pane: (layerIndex+"_layer"), radius:2,color: "#FF0000",});
+                        var marker = L.circleMarker(latlng,{pane: (layerIndex+"_layer"), radius:2,color: colors[layerIndex%10],});
                         var popupContent = "";
                         for (const property in feature.properties) {
                             popupContent = popupContent + "<br>" + `<b>${property}</b>: ${feature.properties[property]}`;
@@ -303,6 +403,10 @@
                         layer.bindPopup(popupContent,{pane: featurePane});
                         attributes.push(feature);
                     },
+                    style: {
+                        fillColor: colors[layerIndex%10],
+                        color: colors[layerIndex%10],
+                    },
                     pane: (layerIndex+"_layer")
                 }).addTo(map);
                     
@@ -336,6 +440,10 @@
                         attributes.push(feature);
                         layer.bindPopup(popupContent,{pane: featurePane});
                     },
+                    style: {
+                        fillColor: colors[layerIndex%10],
+                        color: colors[layerIndex%10],
+                    },
                     pane: (layerIndex+"_layer")
                 }).addTo(map);
                     
@@ -363,7 +471,7 @@
                         map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
                         geojsonLayer = L.geoJson(data, {
                             pointToLayer: function (feature, latlng) {
-                                var marker = L.circleMarker(latlng,{pane: (layerIndex+"_layer"), radius:2,color: "#FF0000",});
+                                var marker = L.circleMarker(latlng,{pane: (layerIndex+"_layer"), radius:2,color: colors[layerIndex%10],});
                                 var popupContent = "";
                                 for (const property in feature.properties) {
                                     popupContent = popupContent + "<br>" + `<b>${property}</b>: ${feature.properties[property]}`;
@@ -385,7 +493,7 @@
                         }).addTo(map);
                     })
                     .fail(function(err){
-                        console.log(err.responseText)
+                        //console.log(err.responseText)
                 });
                 featureList.push(markers);
                 layerList.push(geojsonLayer);
@@ -419,11 +527,15 @@
                                 layer.bindPopup(popupContent,{pane: featurePane});
                                 attributes.push(feature);
                             },
+                            style: {
+                                fillColor: colors[layerIndex%10],
+                                color: colors[layerIndex%10],
+                            },
                             pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
                     .fail(function(err){
-                        console.log(err.responseText)
+                        //console.log(err.responseText)
                 });
                 featureList.push(null);
                 layerList.push(geojsonLayer);
@@ -457,11 +569,15 @@
                                 attributes.push(feature);
                                 layer.bindPopup(popupContent,{pane: featurePane});
                             },
+                            style: {
+                                fillColor: colors[layerIndex%10],
+                                color: colors[layerIndex%10],
+                            },
                             pane: (layerIndex+"_layer")
                         }).addTo(map);
                     })
                     .fail(function(err){
-                        console.log(err.responseText)
+                        //console.log(err.responseText)
                 });
                 featureList.push(null);
                 layerList.push(geojsonLayer);
@@ -494,9 +610,12 @@
                     if (typeof window.addEventListener === 'function'){
                         (function (_deleteButton,_toggleButton,_upButton,_downButton,_attributeTableButton,_saveButton,_i) {
                             try {
+            
                                 _attributeTableButton.addEventListener('click',function(){
-                                   
+                                    
+                                    //Making Attribute Table >>>
                                     attributeTable.onAdd = function (map) {
+                                        controlLoader.show();
                                         this._div = L.DomUtil.create('div', 'attributetabledialog');
                                         this._div.id = "attributetabledialogid";
                                         if(attributeList[_i] == null) {
@@ -518,12 +637,48 @@
                                             table = table + "</table>";
                                             this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideAttributeTableDialog();'>Close</a><br><h3>Attribute Table</h3><h4>The chosen layer has the following attribute data:</h4>" + table;
                                         }
-                                        
+                                        controlLoader.hide();
                                         return this._div;
                                     };
+                                    //<<< Making attribute table
+
+                                    //Making filter table >>>
+                                    filterTable.onAdd = function (map) {
+                                        controlLoader.show();
+                                        this._div = L.DomUtil.create('div', 'filtertabledialog');
+                                        this._div.id = "filtertabledialogid";
+                                        if(attributeList[_i] == null) {
+                                            this._div.innerHTML = "<h3>Filter</h3><h4>The chosen layer has the following attribute data:</h4>No Attributes";
+                                        } else {
+                                            var k;
+                                            var table = "<table><thead><tr><th>Property Name</th><th>Value</th></tr></thead><tbody>";
+                                            for (const property in attributeList[_i][0].properties) {
+                                                table = table + "<tr><td>" + `${property}`+ "</td><td><input type='text' id='" + _i+"_"+`${property}` + "'></td></tr>";
+                                            }
+                                            table = table + "<tr><td><button onclick='startFilter(" + _i + ");'>Filter</button></td></tr>";
+                                            table = table + "</tbody>";
+                                            /*for(k = 0; k < attributeList[_i].length; k++) {
+                                                table = table + "<tr>";
+                                                for (const property in attributeList[_i][k].properties) {
+                                                    table = table + "<td>" + `${attributeList[_i][k].properties[property]}` + "</td>";
+                                                }
+                                                table = table + "</tr>";
+                                            }*/
+                                            table = table + "</table>";
+                                            this._div.innerHTML = "<h3>Filter Table</h3><h4>Enter values for filtering the layer:</h4>"
+                                            + "<h4>Enter name for this layer:</h4>"
+                                            + "<input type='text' placeholder='Enter name for the filtered layer' id='filterlayernameid'><br><br>" 
+                                            + table;
+                                        }
+                                        controlLoader.hide();
+                                        return this._div;
+                                    };
+                                    //<<< Making filter table
                                     attributeTable.addTo(map);
+                                    filterTable.addTo(map);
 
                                     document.getElementById("attributetabledialogid").style.display = "block";
+                                    document.getElementById("filtertabledialogid").style.display = "block";
                                     
                                 });
                                 _saveButton.addEventListener('click',function(){
@@ -535,10 +690,10 @@
                                         icon: "warning",
                                         });
                                     }
-                                    console.log("save button clicked");
+                                    //console.log("save button clicked");
                                 });
                                 _upButton.addEventListener('click', function(){
-                                    console.log(_i+"_layer");
+                                    //console.log(_i+"_layer");
                                     var zIndexOfCurrentLayer = map.getPane((_i+"_layer")).style.zIndex;
                                     var indexOfUpperLayer;
                                     var zIndexOfUpperLayer;
@@ -550,32 +705,32 @@
                                         } 
                                     }
                                     var min = layerOrderList[allUpperOrderIndices[(allUpperOrderIndices.length-1)]];
-                                    console.log("Value of all upper order indices array is: "+allUpperOrderIndices.length);
+                                    //console.log("Value of all upper order indices array is: "+allUpperOrderIndices.length);
                                     for(let k = 0; k < allUpperOrderIndices.length; k++) {
-                                        console.log(layerOrderList[allUpperOrderIndices[k]]);
+                                        //console.log(layerOrderList[allUpperOrderIndices[k]]);
                                         if(layerOrderList[allUpperOrderIndices[k]] <= min) {
                                             min = layerOrderList[allUpperOrderIndices[k]];
                                             higherIndexFound = true;
-                                            console.log("Higher index is: "+min);
+                                            //console.log("Higher index is: "+min);
                                         }
                                     }
                                     indexOfUpperLayer = layerOrderList.indexOf(min);
                                     zIndexOfUpperLayer = min;
                                     //indexOfUpperLayer = layerOrderList.indexOf(zIndexOfUpperLayer);
-                                    console.log("Z Index Of Current Layer: "+zIndexOfCurrentLayer);
-                                    console.log("Z Index Of Upper Layer: "+zIndexOfUpperLayer);
-                                    console.log("Index of current layer: "+_i);
-                                    console.log("Index of upper layer: "+indexOfUpperLayer);
+                                    //console.log("Z Index Of Current Layer: "+zIndexOfCurrentLayer);
+                                    //console.log("Z Index Of Upper Layer: "+zIndexOfUpperLayer);
+                                    //console.log("Index of current layer: "+_i);
+                                    //console.log("Index of upper layer: "+indexOfUpperLayer);
                                     if(higherIndexFound) {
                                         
                                         map.getPane((_i+"_layer")).style.zIndex = zIndexOfUpperLayer;
                                         map.getPane(((indexOfUpperLayer)+"_layer")).style.zIndex = zIndexOfCurrentLayer;
 
                                         innerHTML1 = document.getElementById(_i+"_layer").innerHTML;
-                                        console.log("Inner HTML 1: "+innerHTML1);
+                                        //console.log("Inner HTML 1: "+innerHTML1);
 
                                         innerHTML2 = document.getElementById((indexOfUpperLayer)+"_layer").innerHTML;
-                                        console.log("Inner HTML 2: "+innerHTML2);
+                                        //console.log("Inner HTML 2: "+innerHTML2);
 
                                         document.getElementById(_i+"_layer").innerHTML = innerHTML2;
                                         document.getElementById((indexOfUpperLayer)+"_layer").innerHTML = innerHTML1;
@@ -601,13 +756,13 @@
                                         }
 
                                         addOnClickListenersToLayers();
-                                        console.log("Layer moved up");
+                                        //console.log("Layer moved up");
 
                                     }
                                     
                                 });
                                 _downButton.addEventListener('click', function(){
-                                    console.log(_i+"_layer");
+                                    //console.log(_i+"_layer");
                                     var zIndexOfCurrentLayer = map.getPane((_i+"_layer")).style.zIndex;
                                     var indexOfLowerLayer;
                                     var zIndexOfLowerLayer;
@@ -619,32 +774,32 @@
                                         } 
                                     }
                                     var max = -1;
-                                    console.log("Value of all lower order indices array is: "+allLowerOrderIndices.length);
+                                    //console.log("Value of all lower order indices array is: "+allLowerOrderIndices.length);
                                     for(let k = 0; k < allLowerOrderIndices.length; k++) {
-                                        console.log(layerOrderList[allLowerOrderIndices[k]]);
+                                        //console.log(layerOrderList[allLowerOrderIndices[k]]);
                                         if(layerOrderList[allLowerOrderIndices[k]] > max) {
                                             max = layerOrderList[allLowerOrderIndices[k]];
                                             lowerIndexFound = true;
-                                            console.log("Lower index is: "+max);
+                                            //console.log("Lower index is: "+max);
                                         }
                                     }
                                     indexOfLowerLayer = layerOrderList.indexOf(max);
                                     zIndexOfLowerLayer = max;
                                     //indexOfLowerLayer = layerOrderList.indexOf(zIndexOfLowerLayer);
-                                    console.log("Z Index Of Current Layer: "+zIndexOfCurrentLayer);
-                                    console.log("Z Index Of Lower Layer: "+zIndexOfLowerLayer);
-                                    console.log("Index of current layer: "+_i);
-                                    console.log("Index of lower layer: "+indexOfLowerLayer);
+                                    //console.log("Z Index Of Current Layer: "+zIndexOfCurrentLayer);
+                                    //console.log("Z Index Of Lower Layer: "+zIndexOfLowerLayer);
+                                    //console.log("Index of current layer: "+_i);
+                                    //console.log("Index of lower layer: "+indexOfLowerLayer);
                                     if(lowerIndexFound) {
                                         
                                         map.getPane((_i+"_layer")).style.zIndex = zIndexOfLowerLayer;
                                         map.getPane(((indexOfLowerLayer)+"_layer")).style.zIndex = zIndexOfCurrentLayer;
 
                                         innerHTML1 = document.getElementById(_i+"_layer").innerHTML;
-                                        console.log("Inner HTML 1: "+innerHTML1);
+                                        //console.log("Inner HTML 1: "+innerHTML1);
 
                                         innerHTML2 = document.getElementById((indexOfLowerLayer)+"_layer").innerHTML;
-                                        console.log("Inner HTML 2: "+innerHTML2);
+                                        //console.log("Inner HTML 2: "+innerHTML2);
 
                                         document.getElementById(_i+"_layer").innerHTML = innerHTML2;
                                         document.getElementById((indexOfLowerLayer)+"_layer").innerHTML = innerHTML1;
@@ -670,7 +825,7 @@
                                         }
 
                                         addOnClickListenersToLayers();
-                                        console.log("Layer moved down");
+                                        //console.log("Layer moved down");
 
                                     }
                                  
@@ -695,7 +850,7 @@
                                         }
                                         toggleList[_i] = 1;
                                     }
-                                    console.log("Layer Visibility Toggled");
+                                    //console.log("Layer Visibility Toggled");
                                 });
                                 _deleteButton.addEventListener('click', function(){
                                     swal({
@@ -709,7 +864,7 @@
                                             if(toggleList[_i] == 1) {
                                                 map.removeLayer(layerList[_i]);
                                                 layerOrderList[(_i)] = ((-1)*(_i));
-                                                console.log(featureList[_i]);
+                                                //console.log(featureList[_i]);
                                                 if(featureList[_i] != null) {
                                                     for(index=0;index < featureList[_i].length;index++) {
                                                         map.removeLayer(featureList[_i][index]);
@@ -729,7 +884,7 @@
                                     });
                                 });
                         } catch(err) {
-                            console.log(err);
+                            //console.log(err);
                         }
                         })(deleteButton,toggleButton,upButton,downButton,attributeTableButton,saveButton,i);
                     }
