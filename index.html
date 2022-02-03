@@ -327,7 +327,7 @@
                     console.log("Count is: "+`${xhr.response}`); // response is the server response
                     wpsIntersectionResult = `${xhr.response}`;
                     console.log(wpsIntersectionResult);
-                    addPointLayerFromOperation(wpsIntersectionResult,wpsIntersectionLayerName);
+                    addPointLayerFromOperation(JSON.parse(wpsIntersectionResult),wpsIntersectionLayerName);
                 }
                 };
 
