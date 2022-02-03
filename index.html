@@ -10,6 +10,8 @@
         <link rel="stylesheet" href="https://unpkg.com/native-toast@2.0.0/dist/native-toast.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
         <link rel="stylesheet" href="node_modules/leaflet-loader/leaflet-loader.css"/>
+        <link rel="stylesheet" href="node_modules/mouse_position/L.Control.MousePosition.css"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.12.0/css/ol.css" type="text/css">
         <script src="https://kit.fontawesome.com/387047fbfe.js" crossorigin="anonymous"></script>
         <style>
             body {
@@ -43,6 +45,8 @@
         <!--<script src="outTurf.js"></script>-->
         <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
         <script src='node_modules/leaflet-loader/leaflet-loader.js'></script>
+        <script src='node_modules/mouse_position/L.Control.MousePosition.js'></script>
+        <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.12.0/build/ol.js"></script>
         <!--<input style="margin-left: 10px;" type="button" id="Btn1" value="Add New Layer" onclick="showToast('You added a layer');" class="btnStyle span3"/>
         <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
         <input type="button" id="Btn3" value="Save" class="btnStyle span3"/>
@@ -59,13 +63,14 @@
             var layerOrderList = [];
             var layerMultiplier = 1200;
             var attributeList = [];
+            var urlList = [];
 
             var colors = ["#C71585","#A52A2A","#8B008B","#006400","#00FFFF","#FF00FF","#FFE4E1","#2F4F4F","#D2691E","#696969"];
 
             var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
 
             var controlLoader = L.control.loader().addTo(map);
-
+            L.control.mousePosition().addTo(map);
             //controlLoader.show();
             //controlLoader.hide();
 
@@ -81,6 +86,7 @@
             featureList.push(null);
             attributeList.push(null);
             toggleList.push(1);
+            urlList.push(null);
             layerOrderList.push(layerIndex*layerMultiplier);
 
             //Add Title
@@ -125,6 +131,14 @@
                 document.getElementById("bufferdialog").style.display = "none";
             }
 
+            function hideWPSCountDialog() {
+                document.getElementById("wpscountdialog").style.display = "none";
+            }
+
+            function hideWPSIntersectionDialog() {
+                document.getElementById("wpsintersectiondialog").style.display = "none";
+            }
+
             function hideVoronoiDialog() {
                 document.getElementById("voronoidialog").style.display = "none";
             }
@@ -143,9 +157,28 @@
             layerAddingDialogBox.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'layeraddingdialog');
                 this._div.id = "layeraddingdialogid";
-                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4><div class='inline'><a href='#' onclick='addPointLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\")'>Varanasi School Points Data</a>&nbsp;<a href='#' onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&maxFeatures=3451&outputFormat=application%2Fjson\");'><img src='images/svg/copy.svg' height=16 width=auto></img></a></div><br><br><div class='inline'><a href='#' onclick='addPolygonLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'>Varanasi Village Boundary</a>&nbsp;<a href='#' onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avillage_boundary_wgs84&outputFormat=application%2Fjson\")'><img src='images/svg/copy.svg' height=16 width=auto></img></a></div><br><br><div class='inline'><a href='#' onclick='addLineLayerFromSDI(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'>Varanasi Road Network</a><a href='#'><img src='images/svg/copy.svg' height=16 width=auto onclick='navigator.clipboard.writeText(\"http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&&outputFormat=application%2Fjson\")'></img></a></div>"
+                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4>"
+                + "<div class='externalwfsselection'><h5>Cloud GIS WFS</h5>"
+                + "<select name='cloudgiswfs' id='cloudgiswfsid'>"
+                + "<option value = 'http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson'>Varanasi School Points</option>"
+                + "<option value = 'http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Avillage_boundary_wgs84&amp;outputFormat=application%2Fjson'>Varanasi Village Boundary</option>"
+                + "<option value = 'http://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&outputFormat=application%2Fjson'>Varanasi Road Network</option>"
+                + "</select>&nbsp;<a href='#' onclick='document.getElementById(\"ogcurl\").value = document.getElementById(\"cloudgiswfsid\").value;'><img src='images/svg/copy.svg' height=16 width=auto></a></div>"
+                + "<br><div class='externalwfsselection'><h5>Marine Regions WFS <a href='https://marineregions.org/webservices'>visit website</a></h5>"
+                + "<select name='marineregions' id='marineregionsid'>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=eez_boundaries&maxFeatures=50&outputformat=application/json'>Boundaries</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=eez_archipelagic_waters&maxFeatures=50&outputformat=application/json'>Archipelagic Waters</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=arcticmarineareas&maxFeatures=50&outputformat=application/json'>Arctic Marine Areas</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=brasdorlakebiospherereserve&maxFeatures=50&outputformat=application/json'>Brasdor Lake Biosphere Reserve</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=coasts_subnational&maxFeatures=50&outputformat=application/json'>Coasts Subnational</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=comarge&maxFeatures=50&outputformat=application/json'>Continental Margins</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=cross_dateline_polygons&maxFeatures=50&outputformat=application/json'>Cross Dateline Polygons</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=eca_reg13_nox&maxFeatures=50&outputformat=application/json'>Emission Control Areas (ECA) Marpol Regulation 13</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=eca_reg14_sox_pm&maxFeatures=50&outputformat=application/json'>Emission Control Areas (ECA) Marpol Regulation 14</option>"
+                + "<option value = 'https://geo.vliz.be/geoserver/MarineRegions/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=eez&maxFeatures=50&outputformat=application/json'>Exclusive Economic Zones (200 NM) (v11, world, 2019)</option>"
+                +"</select>&nbsp;<a href='#' onclick='document.getElementById(\"ogcurl\").value = document.getElementById(\"marineregionsid\").value;'><img src='images/svg/copy.svg' height=16 width=auto></a></div>"
                 + "<br><br><hr><h4>Or enter a custom OGC Webservice URL below:</h4>"
-                + "<textarea type='text' placeholder='Enter OGC URL' id='ogcurl'></textarea>"
+                + "<textarea type='text' rows='10' cols='40' placeholder='Enter OGC URL' id='ogcurl'></textarea>"
                 + "<br><br><input placeholder='Enter a name for this layer' type='text' id='ogcname'/>"
                 + "<h4>And then press one of the below buttons:</h4>"
                 + "<button onclick='getInputValueAndImportPointLayerFromSDI();'>Point Layer</button>&nbsp;<button onclick='getInputValueAndImportLineLayerFromSDI();'>Line Layer</button>&nbsp;<button onclick='getInputValueAndImportPolygonLayerFromSDI();'>Polygon Layer</button>"
@@ -163,7 +196,9 @@
                 this._div.id = "processingtoolboxid";
                 this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>"
                 + "<a href='#' onclick='buffer();'>Buffer</a>"
-                + "<br><a href='#' onclick='voronoi();'>Voronoi Polygons</a>";
+                + "<br><a href='#' onclick='voronoi();'><s>Voronoi Polygons</s></a>"
+                + "<br><a href='#' onclick='wpsCount();'>Count</a>"
+                + "<br><a href='#' onclick='wpsIntersection();'>Intersection</a>";
                 return this._div;
             };
             processingToolbox.addTo(map);
@@ -187,6 +222,215 @@
             layerControl.addTo(map);
             layerControl.addLayer(OSMLayer,"OSM Standard");
             layerIndex++;
+
+            function wpsIntersection() {
+                var wpsCountDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Selet a higher order layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+
+                var selectTag2 = "<label for='layerslow'>Selet a lower order layer:</label>"
+                + "<select name='layerslow' id='layerselectlow'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag2 = selectTag2 + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag2 = selectTag2 + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                wpsCountDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'wpsintersectiondialog');
+                    this._div.id = "wpsintersectiondialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideWPSIntersectionDialog();'>Close</a>"
+                    + "<br><h3>Intersection</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br>"
+                    + selectTag2
+                    + "<br><input type='text' id='wpsIntersectionLayerName' placeholder='Give a name to this layer'/>"
+                    + "<br><br><button onclick='startWPSIntersection();'>Start Processing</button>";
+                    return this._div;
+                };
+                wpsCountDialog.addTo(map);
+            }
+
+            function startWPSIntersection() {
+                controlLoader.show();
+                var selectedLayerId = document.getElementById('layerselect').value;
+                var selectedLayerIdLow = document.getElementById('layerselectlow').value;
+                var wpsIntersectionLayerName = document.getElementById('wpsIntersectionLayerName').value;
+                var wpsIntersectionResult = null;
+
+                console.log(selectedLayerId);
+                console.log(selectedLayerIdLow);
+
+                // 1. Create a new XMLHttpRequest object
+                let xhr = new XMLHttpRequest();
+                //console.log(urlList[selectedLayerId]);
+                higherURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
+                lowerURL = urlList[selectedLayerIdLow].replaceAll('&','&amp;');
+                // 2. Configure it: GET-request for the URL /article/.../load
+                xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
+                var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
++ '<ows:Identifier>vec:IntersectionFeatureCollection</ows:Identifier>'
++  '<wps:DataInputs>'
++    '<wps:Input>'
++      '<ows:Identifier>first feature collection</ows:Identifier>'
++      '<wps:Reference mimeType="application/json" xlink:href="' + higherURL + '" method="GET"/>'
++    '</wps:Input>'
++    '<wps:Input>'
++      '<ows:Identifier>second feature collection</ows:Identifier>'
++      '<wps:Reference mimeType="application/json" xlink:href="' + lowerURL + '" method="GET"/>'
++    '</wps:Input>'
++    '<wps:Input>'
++      '<ows:Identifier>intersectionMode</ows:Identifier>'
++      '<wps:Data>'
++        '<wps:LiteralData>SECOND</wps:LiteralData>'
++      '</wps:Data>'
++    '</wps:Input>'
++  '</wps:DataInputs>'
++  '<wps:ResponseForm>'
++    '<wps:RawDataOutput mimeType="application/json">'
++      '<ows:Identifier>result</ows:Identifier>'
++    '</wps:RawDataOutput>'
++  '</wps:ResponseForm>'
++'</wps:Execute>';
+
+                console.log(xmlBodyCount);
+                xhr.send(xmlBodyCount);
+
+                // 4. This will be called after the response is received
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    controlLoader.show();
+                    console.log("Count is: "+`${xhr.response}`); // response is the server response
+                    wpsIntersectionResult = `${xhr.response}`;
+                    console.log(wpsIntersectionResult);
+                    addPointLayerFromOperation(wpsIntersectionResult,wpsIntersectionLayerName);
+                }
+                };
+
+                xhr.onprogress = function(event) {
+                /*if (event.lengthComputable) {
+                    alert(`Received ${event.loaded} of ${event.total} bytes`);
+                } else {
+                    alert(`Received ${event.loaded} bytes`); // no Content-Length
+                }*/
+
+                };
+
+                xhr.onerror = function() {
+                alert("Request failed");
+                };
+                
+            }
+
+            function wpsCount() {
+                var wpsCountDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Selet a point layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                wpsCountDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'wpscountdialog');
+                    this._div.id = "wpscountdialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideWPSCountDialog();'>Close</a>"
+                    + "<br><h3>Count</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br><input type='text' id='wpsCountLayerName' placeholder='Give a name to this layer'/>"
+                    + "<br><br><button onclick='startWPSCount();'>Start Processing</button>";
+                    return this._div;
+                };
+                wpsCountDialog.addTo(map);
+            }
+
+            function startWPSCount() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
+
+                // 1. Create a new XMLHttpRequest object
+                let xhr = new XMLHttpRequest();
+                console.log(urlList[selectedLayerId]);
+                countURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
+                // 2. Configure it: GET-request for the URL /article/.../load
+                xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
+                var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
+                +  '<ows:Identifier>vec:Count</ows:Identifier>'
+                +  '<wps:DataInputs>'
+                +    '<wps:Input>'
+                +      '<ows:Identifier>features</ows:Identifier>'
+                +      '<wps:Reference mimeType="application/json" xlink:href="'+ countURL +'" method="GET"/>'
+                +    '</wps:Input>'
+                +  '</wps:DataInputs>'
+                +  '<wps:ResponseForm>'
+                +    '<wps:RawDataOutput>'
+                +      '<ows:Identifier>result</ows:Identifier>'
+                +    '</wps:RawDataOutput>'
+                +  '</wps:ResponseForm>'
+                + '</wps:Execute>';
+
+                console.log(xmlBodyCount);
+                xhr.send(xmlBodyCount);
+
+                // 4. This will be called after the response is received
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    alert("Count is: "+`${xhr.response}`); // response is the server response
+                }
+                };
+
+                xhr.onprogress = function(event) {
+                /*if (event.lengthComputable) {
+                    alert(`Received ${event.loaded} of ${event.total} bytes`);
+                } else {
+                    alert(`Received ${event.loaded} bytes`); // no Content-Length
+                }*/
+
+                };
+
+                xhr.onerror = function() {
+                alert("Request failed");
+                };
+                
+                //addPolygonLayerFromOperation(bufferList,bufferLayerName);
+            }
 
             function buffer() {
                 var bufferDialog = L.control({position: 'topright'});
@@ -273,14 +517,21 @@
                 var pointList = [];
                 var voronoiList = [];
                 for(let i = 0; i < attributeList[selectedLayerId].length; i++) {
-                    point = turf.point([attributeList[selectedLayerId][i]["properties"]["longitude"], attributeList[selectedLayerId][i]["properties"]["latitude"]],{schcd: attributeList[selectedLayerId][i]["properties"]["schcd"]});
+                    point = turf.point([attributeList[selectedLayerId][i]["properties"]["longitude"], attributeList[selectedLayerId][i]["properties"]["latitude"]],{name: attributeList[selectedLayerId][i]["properties"]["schcd"]});
                     pointList.push(point);
                 }
                 var pointFeatures = turf.featureCollection(pointList);
                 //console.log(pointFeatures);
-                voronoiList = attributeList[selectedLayerId][i];
+                //voronoiList = attributeList[selectedLayerId][i];
                 //voronoiList.push(attributeList[selectedLayerId][i]);
-                var voronoi = turf.bbox(attributeList[selectedLayerId][i]);
+                var voronoi = turf.voronoi(pointFeatures,{bbox: [82, 25, 84, 26]});
+                console.log(voronoi);
+                /*L.geoJSON(voronoi, {
+                    style: {
+                        fillColor: colors[layerIndex%10],
+                        color: colors[layerIndex%10],
+                    },
+                }).addTo(map);*/
                 addPolygonLayerFromOperation(voronoi,voronoiLayerName);
 
             }
@@ -501,6 +752,7 @@
                 toggleList.push(1);
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
+                urlList.push(url);
                 await layerControl.addLayer(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
@@ -543,6 +795,7 @@
                 toggleList.push(1);
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
+                urlList.push(url);
                 await layerControl.addLayer(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
@@ -586,6 +839,7 @@
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
                 await layerControl.addLayer(geojsonLayer,givenLayerName);
+                urlList.push(url);
                 layerIndex++;
                 addOnClickListenersToLayers();
                 controlLoader.hide();
