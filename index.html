@@ -46,7 +46,6 @@
         <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
         <script src='node_modules/leaflet-loader/leaflet-loader.js'></script>
         <script src='node_modules/mouse_position/L.Control.MousePosition.js'></script>
-        <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.12.0/build/ol.js"></script>
         <!--<input style="margin-left: 10px;" type="button" id="Btn1" value="Add New Layer" onclick="showToast('You added a layer');" class="btnStyle span3"/>
         <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
         <input type="button" id="Btn3" value="Save" class="btnStyle span3"/>
@@ -135,10 +134,6 @@
                 document.getElementById("wpscountdialog").style.display = "none";
             }
 
-            function hideWPSIntersectionDialog() {
-                document.getElementById("wpsintersectiondialog").style.display = "none";
-            }
-
             function hideVoronoiDialog() {
                 document.getElementById("voronoidialog").style.display = "none";
             }
@@ -160,9 +155,9 @@
                 this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4>"
                 + "<div class='externalwfsselection'><h5>Cloud GIS WFS</h5>"
                 + "<select name='cloudgiswfs' id='cloudgiswfsid'>"
-                + "<option value = 'http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson'>Varanasi School Points</option>"
-                + "<option value = 'http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Avillage_boundary_wgs84&amp;outputFormat=application%2Fjson'>Varanasi Village Boundary</option>"
-                + "<option value = 'http://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&outputFormat=application%2Fjson'>Varanasi Road Network</option>"
+                + "<option value = 'http://54.197.21.31/:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson'>Varanasi School Points</option>"
+                + "<option value = 'http://54.197.21.31/:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Avillage_boundary_wgs84&amp;outputFormat=application%2Fjson'>Varanasi Village Boundary</option>"
+                + "<option value = 'http://54.197.21.31/:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&outputFormat=application%2Fjson'>Varanasi Road Network</option>"
                 + "</select>&nbsp;<a href='#' onclick='document.getElementById(\"ogcurl\").value = document.getElementById(\"cloudgiswfsid\").value;'><img src='images/svg/copy.svg' height=16 width=auto></a></div>"
                 + "<br><div class='externalwfsselection'><h5>Marine Regions WFS <a href='https://marineregions.org/webservices'>visit website</a></h5>"
                 + "<select name='marineregions' id='marineregionsid'>"
@@ -198,7 +193,8 @@
                 + "<a href='#' onclick='buffer();'>Buffer</a>"
                 + "<br><a href='#' onclick='voronoi();'><s>Voronoi Polygons</s></a>"
                 + "<br><a href='#' onclick='wpsCount();'>Count</a>"
-                + "<br><a href='#' onclick='wpsIntersection();'>Intersection</a>";
+                + "<br><a href='#' onclick='wpsIntersection();'>Intersection</a>"
+                + "<br><a href='#' onclick='wpsUnion();'>Union</a>";
                 return this._div;
             };
             processingToolbox.addTo(map);
@@ -223,8 +219,13 @@
             layerControl.addLayer(OSMLayer,"OSM Standard");
             layerIndex++;
 
-            function wpsIntersection() {
-                var wpsCountDialog = L.control({position: 'topright'});
+            //WPS Union Function >>>
+            function hideWPSUnionDialog() {
+                document.getElementById("wpsuniondialog").style.display = "none";
+            }
+
+            function wpsUnion() {
+                var wpsUnionDialog = L.control({position: 'topright'});
             
                 var selectTag = "<label for='layers'>Selet a higher order layer:</label>"
                 + "<select name='layers' id='layerselect'>";
@@ -256,7 +257,130 @@
                 }
                 selectTag2 = selectTag2 + "</select>";
                 //console.log(attributeList[1][0]["properties"]["latitude"]);
-                wpsCountDialog.onAdd = function (map) {
+                wpsUnionDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'wpsuniondialog');
+                    this._div.id = "wpsuniondialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideWPSUnionDialog();'>Close</a>"
+                    + "<br><h3>Union</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br>"
+                    + selectTag2
+                    + "<br><input type='text' id='wpsUnionLayerName' placeholder='Give a name to this layer'/>"
+                    + "<br><br><button onclick='startWPSUnion();'>Start Processing</button>";
+                    return this._div;
+                };
+                wpsUnionDialog.addTo(map);
+            }
+
+            function startWPSUnion() {
+                controlLoader.show();
+                var selectedLayerId = document.getElementById('layerselect').value;
+                var selectedLayerIdLow = document.getElementById('layerselectlow').value;
+                var wpsUnionLayerName = document.getElementById('wpsUnionLayerName').value;
+                var wpsUnionResult = null;
+
+                console.log(selectedLayerId);
+                console.log(selectedLayerIdLow);
+
+                // 1. Create a new XMLHttpRequest object
+                let xhr = new XMLHttpRequest();
+                //console.log(urlList[selectedLayerId]);
+                higherURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
+                lowerURL = urlList[selectedLayerIdLow].replaceAll('&','&amp;');
+                // 2. Configure it: GET-request for the URL /article/.../load
+                xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
+                var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
+                + '<ows:Identifier>vec:UnionFeatureCollection</ows:Identifier>'
+                + '<wps:DataInputs>'
+                + '<wps:Input>'
+                +    '<ows:Identifier>first</ows:Identifier>'
+                +   '<wps:Reference mimeType="application/json" xlink:href="http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson" method="GET"/>'
+                + '</wps:Input>'
+                + '<wps:Input>'
+                +   '<ows:Identifier>second</ows:Identifier>'
+                +   '<wps:Reference mimeType="application/json" xlink:href="http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Avillage_boundary_wgs84&amp;outputFormat=application%2Fjson" method="GET"/>'
+                +  '</wps:Input>'
+                + '</wps:DataInputs>'
+                + '<wps:ResponseForm>'
+                + '<wps:RawDataOutput mimeType="application/json">'
+                +   '<ows:Identifier>result</ows:Identifier>'
+                + '</wps:RawDataOutput>'
+                + '</wps:ResponseForm>'
+                +'</wps:Execute>';
+
+                console.log(xmlBodyCount);
+                xhr.send(xmlBodyCount);
+
+                // 4. This will be called after the response is received
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    controlLoader.show();
+                    console.log("Count is: "+`${xhr.response}`); // response is the server response
+                    wpsIntersectionResult = `${xhr.response}`;
+                    console.log(wpsUnionResult);
+                    addPointLayerFromOperation(JSON.parse(wpsUnionResult),wpsUnionLayerName);
+                }
+                };
+
+                xhr.onprogress = function(event) {
+                /*if (event.lengthComputable) {
+                    alert(`Received ${event.loaded} of ${event.total} bytes`);
+                } else {
+                    alert(`Received ${event.loaded} bytes`); // no Content-Length
+                }*/
+
+                };
+
+                xhr.onerror = function() {
+                alert("Request failed");
+                };
+                
+            }
+            //<<< WPS Union Function
+
+            //WPS Intersection Function >>>
+            function hideWPSIntersectionDialog() {
+                document.getElementById("wpsintersectiondialog").style.display = "none";
+            }
+
+            function wpsIntersection() {
+                var wpsIntersectionDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Selet a higher order layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+
+                var selectTag2 = "<label for='layerslow'>Selet a lower order layer:</label>"
+                + "<select name='layerslow' id='layerselectlow'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag2 = selectTag2 + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag2 = selectTag2 + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                wpsIntersectionDialog.onAdd = function (map) {
                     this._div = L.DomUtil.create('div', 'wpsintersectiondialog');
                     this._div.id = "wpsintersectiondialog";
                     this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideWPSIntersectionDialog();'>Close</a>"
@@ -269,7 +393,7 @@
                     + "<br><br><button onclick='startWPSIntersection();'>Start Processing</button>";
                     return this._div;
                 };
-                wpsCountDialog.addTo(map);
+                wpsIntersectionDialog.addTo(map);
             }
 
             function startWPSIntersection() {
@@ -290,29 +414,29 @@
                 // 2. Configure it: GET-request for the URL /article/.../load
                 xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
                 var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
-+ '<ows:Identifier>vec:IntersectionFeatureCollection</ows:Identifier>'
-+  '<wps:DataInputs>'
-+    '<wps:Input>'
-+      '<ows:Identifier>first feature collection</ows:Identifier>'
-+      '<wps:Reference mimeType="application/json" xlink:href="' + higherURL + '" method="GET"/>'
-+    '</wps:Input>'
-+    '<wps:Input>'
-+      '<ows:Identifier>second feature collection</ows:Identifier>'
-+      '<wps:Reference mimeType="application/json" xlink:href="' + lowerURL + '" method="GET"/>'
-+    '</wps:Input>'
-+    '<wps:Input>'
-+      '<ows:Identifier>intersectionMode</ows:Identifier>'
-+      '<wps:Data>'
-+        '<wps:LiteralData>SECOND</wps:LiteralData>'
-+      '</wps:Data>'
-+    '</wps:Input>'
-+  '</wps:DataInputs>'
-+  '<wps:ResponseForm>'
-+    '<wps:RawDataOutput mimeType="application/json">'
-+      '<ows:Identifier>result</ows:Identifier>'
-+    '</wps:RawDataOutput>'
-+  '</wps:ResponseForm>'
-+'</wps:Execute>';
+                + '<ows:Identifier>vec:IntersectionFeatureCollection</ows:Identifier>'
+                +  '<wps:DataInputs>'
+                +    '<wps:Input>'
+                +      '<ows:Identifier>first feature collection</ows:Identifier>'
+                +      '<wps:Reference mimeType="application/json" xlink:href="' + higherURL + '" method="GET"/>'
+                +    '</wps:Input>'
+                +    '<wps:Input>'
+                +      '<ows:Identifier>second feature collection</ows:Identifier>'
+                +      '<wps:Reference mimeType="application/json" xlink:href="' + lowerURL + '" method="GET"/>'
+                +    '</wps:Input>'
+                +    '<wps:Input>'
+                +      '<ows:Identifier>intersectionMode</ows:Identifier>'
+                +      '<wps:Data>'
+                +        '<wps:LiteralData>SECOND</wps:LiteralData>'
+                +      '</wps:Data>'
+                +    '</wps:Input>'
+                +  '</wps:DataInputs>'
+                +  '<wps:ResponseForm>'
+                +    '<wps:RawDataOutput mimeType="application/json">'
+                +      '<ows:Identifier>result</ows:Identifier>'
+                +    '</wps:RawDataOutput>'
+                +  '</wps:ResponseForm>'
+                +'</wps:Execute>';
 
                 console.log(xmlBodyCount);
                 xhr.send(xmlBodyCount);
@@ -345,6 +469,7 @@
                 };
                 
             }
+            //<<< WPS Intersection Function
 
             function wpsCount() {
                 var wpsCountDialog = L.control({position: 'topright'});
