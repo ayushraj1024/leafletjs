@@ -1,3 +1,5 @@
+library(spatstat)
+library(maptools)
 args <- commandArgs(TRUE)
 
 N <- args[1]
