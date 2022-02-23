@@ -21,7 +21,7 @@
             }};
 
             var data = `{
-            "geojson": `+pointData+`,
+            "geojson": `+JSON.stringify(pointData)+`,
             }`;
 
             xhr.send(data);
