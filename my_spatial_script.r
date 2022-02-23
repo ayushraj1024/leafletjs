@@ -1,10 +1,11 @@
 library(spatstat)
 library(maptools)
+library(geojsonR)
 
 args <- commandArgs(TRUE)
 N <- args[1]
-
-sp <- as(N, "Spatial")
+char_js = FROM_GeoJson(url_file_string = N)
+sp <- as(char_js, "Spatial")
 sp <- as(sp, "ppp")
 
 e <- envelope(sp, Kest, nsim = 100)

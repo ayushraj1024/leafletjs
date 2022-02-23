@@ -53,7 +53,7 @@
                     var point = map.latLngToLayerPoint(new L.LatLng(y, x));
                     this.stream.point(point.x, point.y);
                 }
-                var transform = d3.geo.transform({point: projectPoint}),
+                var transform = d3.geo.transform({point: projectPoint});
                 path = d3.geo.path().projection(transform);
                 var feature = g.selectAll("path").data(collection.features).enter().append("path");
                 feature.attr("d", path);
