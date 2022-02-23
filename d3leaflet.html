@@ -48,6 +48,7 @@
             var svg = d3.select(map.getPanes().overlayPane).append("svg"),
             g = svg.append("g").attr("class", "leaflet-zoom-hide");
             statesData.map(function(collection) {
+                console.log(collection);
                 function projectPoint(x, y) {
                     var point = map.latLngToLayerPoint(new L.LatLng(y, x));
                     this.stream.point(point.x, point.y);
