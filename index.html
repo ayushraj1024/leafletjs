@@ -128,14 +128,17 @@
 
             function hideBufferDialog() {
                 document.getElementById("bufferdialog").style.display = "none";
+                document.getElementById("bufferdialog").remove();
             }
 
             function hideWPSCountDialog() {
                 document.getElementById("wpscountdialog").style.display = "none";
+                document.getElementById("wpscountdialog").remove();
             }
 
             function hideVoronoiDialog() {
                 document.getElementById("voronoidialog").style.display = "none";
+                document.getElementById("voronoidialog").remove();
             }
             
             layerButtonControl.onAdd = function (map) {
@@ -222,6 +225,7 @@
             //WPS Union Function >>>
             function hideWPSUnionDialog() {
                 document.getElementById("wpsuniondialog").style.display = "none";
+                document.getElementById("wpsuniondialog").remove();
             }
 
             function wpsUnion() {
@@ -345,6 +349,7 @@
             //WPS Intersection Function >>>
             function hideWPSIntersectionDialog() {
                 document.getElementById("wpsintersectiondialog").style.display = "none";
+                document.getElementById("wpsintersectiondialog").remove();
             }
 
             function wpsIntersection() {
@@ -415,27 +420,31 @@
                 xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
                 var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
                 + '<ows:Identifier>vec:IntersectionFeatureCollection</ows:Identifier>'
-                +  '<wps:DataInputs>'
-                +    '<wps:Input>'
-                +      '<ows:Identifier>first feature collection</ows:Identifier>'
-                +      '<wps:Reference mimeType="application/json" xlink:href="' + higherURL + '" method="GET"/>'
-                +    '</wps:Input>'
-                +    '<wps:Input>'
-                +      '<ows:Identifier>second feature collection</ows:Identifier>'
-                +      '<wps:Reference mimeType="application/json" xlink:href="' + lowerURL + '" method="GET"/>'
-                +    '</wps:Input>'
-                +    '<wps:Input>'
-                +      '<ows:Identifier>intersectionMode</ows:Identifier>'
-                +      '<wps:Data>'
-                +        '<wps:LiteralData>SECOND</wps:LiteralData>'
-                +      '</wps:Data>'
-                +    '</wps:Input>'
-                +  '</wps:DataInputs>'
-                +  '<wps:ResponseForm>'
-                +    '<wps:RawDataOutput mimeType="application/json">'
-                +      '<ows:Identifier>result</ows:Identifier>'
-                +    '</wps:RawDataOutput>'
-                +  '</wps:ResponseForm>'
+                + '<wps:DataInputs>'
+                +  '<wps:Input>'
+                +   '<ows:Identifier>first feature collection</ows:Identifier>'
+                +    '<wps:Data>'
+                +    '<wps:ComplexData mimeType="application/json"><![CDATA[' + JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])) + ']]></wps:ComplexData>'   
+                +    '</wps:Data>'
+                +  '</wps:Input>'
+                +  '<wps:Input>'
+                +    '<ows:Identifier>second feature collection</ows:Identifier>'
+                +    '<wps:Data>'
+                +    '<wps:ComplexData mimeType="application/json"><![CDATA[' + JSON.stringify(turf.featureCollection(attributeList[selectedLayerIdLow])) + ']]></wps:ComplexData>'   
+                +    '</wps:Data>'
+                +  '</wps:Input>'
+                +  '<wps:Input>'
+                +    '<ows:Identifier>intersectionMode</ows:Identifier>'
+                +    '<wps:Data>'
+                +      '<wps:LiteralData>FIRST</wps:LiteralData>'
+                +    '</wps:Data>'
+                +  '</wps:Input>'
+                +'</wps:DataInputs>'
+                +'<wps:ResponseForm>'
+                +  '<wps:RawDataOutput mimeType="application/json">'
+                +    '<ows:Identifier>result</ows:Identifier>'
+                +  '</wps:RawDataOutput>'
+                +'</wps:ResponseForm>'
                 +'</wps:Execute>';
 
                 console.log(xmlBodyCount);
@@ -560,15 +569,15 @@
             function buffer() {
                 var bufferDialog = L.control({position: 'topright'});
             
-                var selectTag = "<label for='layers'>Selet a point layer:</label>"
+                var selectTag = "<label for='layers'>Select a point layer:</label>"
                 + "<select name='layers' id='layerselect'>";
                 for(let i = 0;i < attributeList.length; i++)
                 {
                     try {
-                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
-                            //console.log("Layer is a point layer");
+                        if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            
                             selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
-                        //}
+                        }
                     } catch(err) {
                         //console.log(err);
                     }
@@ -625,14 +634,71 @@
                 var selectedLayerId = document.getElementById('layerselect').value;
                 var bufferLayerName = document.getElementById('bufferLayerName').value;
 
-                var bufferList = [];
+                // 1. Create a new XMLHttpRequest object
+                let xhr = new XMLHttpRequest();
+                console.log([selectedLayerId]);
+                //countURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
+                // 2. Configure it: GET-request for the URL /article/.../load
+                xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
+                var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
+                +  '<ows:Identifier>vec:BufferFeatureCollection</ows:Identifier>'
+                +  '<wps:DataInputs>'
+                +    '<wps:Input>'
+                +      '<ows:Identifier>features</ows:Identifier>'
+                +      '<wps:Data>'
+                +        '<wps:ComplexData mimeType="application/json"><![CDATA[' + JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])) + ']]></wps:ComplexData></wps:Data>'
+                +    '</wps:Input>'
+                +    '<wps:Input>'
+                +      '<ows:Identifier>distance</ows:Identifier>'
+                +      '<wps:Data>'
+                +        '<wps:LiteralData>0.005</wps:LiteralData>'
+                +      '</wps:Data>'
+                +    '</wps:Input>'
+                +  '</wps:DataInputs>'
+                +  '<wps:ResponseForm>'
+                +    '<wps:RawDataOutput mimeType="application/json">'
+                +      '<ows:Identifier>result</ows:Identifier>'
+                +    '</wps:RawDataOutput>'
+                +  '</wps:ResponseForm>'
+                +'</wps:Execute>';
+
+                console.log(xmlBodyCount);
+                xhr.send(xmlBodyCount);
+
+                // 4. This will be called after the response is received
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    //alert("Count is: "+`${xhr.response}`); // response is the server response
+                    wpsBufferResult = `${xhr.response}`;
+                    console.log(wpsBufferResult);
+                    addPolygonLayerFromOperation(JSON.parse(wpsBufferResult),bufferLayerName);
+                }
+                };
+
+                xhr.onprogress = function(event) {
+                /*if (event.lengthComputable) {
+                    alert(`Received ${event.loaded} of ${event.total} bytes`);
+                } else {
+                    alert(`Received ${event.loaded} bytes`); // no Content-Length
+                }*/
+
+                };
+
+                xhr.onerror = function() {
+                alert("Request failed");
+                };
+
+                /*var bufferList = [];
                 for(let i = 0; i < attributeList[selectedLayerId].length; i++) {
                     //var point = turf.point([attributeList[selectedLayerId][i]["properties"]["longitude"], attributeList[selectedLayerId][i]["properties"]["latitude"]]);
                     var buffered = turf.buffer(attributeList[selectedLayerId][i], 500, {units: 'meters'});
                     bufferList.push(buffered);
                 }
                 
-                addPolygonLayerFromOperation(bufferList,bufferLayerName);
+                addPolygonLayerFromOperation(bufferList,bufferLayerName);*/
 
             }
 

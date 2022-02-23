@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title>
+            D3 with Leaflet
+        </title>
+        <link rel="stylesheet" href="d3leaflet.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+        <link rel="stylesheet" href="https://unpkg.com/native-toast@2.0.0/dist/native-toast.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+        <link rel="stylesheet" href="node_modules/leaflet-loader/leaflet-loader.css"/>
+        <link rel="stylesheet" href="node_modules/mouse_position/L.Control.MousePosition.css"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.12.0/css/ol.css" type="text/css">
+        <script src="https://kit.fontawesome.com/387047fbfe.js" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <script src="https://unpkg.com/native-toast@2.0.0/dist/native-toast.min.js"></script>
+        <script src="nativeToast.js"></script>
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+        <script src="Leaflet.draw-develop\src\draw\handler\Draw.Polygon.js"></script>
+        <script src="https://unpkg.com/osmtogeojson@2.2.12/osmtogeojson.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.js"></script>
+        <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+        <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
+        <script src="usStatesData.js"></script>
+        <script src="addLayer.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+        <script src="node_modules/leaflet-dialog/Leaflet.Dialog.js"></script>
+        <script src="node_modules/leaflet-notifications/js/leaflet-notifications.js"></script>
+        <!--<script src="outTurf.js"></script>-->
+        <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+        <script src='node_modules/leaflet-loader/leaflet-loader.js'></script>
+        <script src='node_modules/mouse_position/L.Control.MousePosition.js'></script>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <div id="map"></div>
+        <script>
+
+            var map = new L.map("map", {center: [37.8, -96.9], zoom: 4})
+            map.createPane(("0_layer"));
+            var OSMLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                pane: ("0_layer"),
+                attribution: '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            var svg = d3.select(map.getPanes().overlayPane).append("svg"),
+            g = svg.append("g").attr("class", "leaflet-zoom-hide");
+            statesData.map(function(collection) {
+                function projectPoint(x, y) {
+                    var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+                    this.stream.point(point.x, point.y);
+                }
+                var transform = d3.geo.transform({point: projectPoint}),
+                path = d3.geo.path().projection(transform);
+                var feature = g.selectAll("path").data(collection.features).enter().append("path");
+                feature.attr("d", path);
+                var bounds = path.bounds(collection),
+                topLeft = bounds[0],
+                bottomRight = bounds[1];
+                svg.attr("width", bottomRight[0] - topLeft[0]).attr("height", bottomRight[1] - topLeft[1]).style("left", topLeft[0] + "px").style("top", topLeft[1] + "px");
+                svg.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+            });
+        </script>
+    </body>
+</html>
