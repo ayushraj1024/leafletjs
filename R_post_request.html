@@ -7,24 +7,32 @@
     <body>
         <script src="pointData.js"></script>
         <script>
-            var url = "r_spatial_function.php";
+            var data = new FormData();
+            data.append("geojson", JSON.stringify(pointData));
+            data.append("nocache", "Yes");
 
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", url);
+            xhr.withCredentials = true;
 
-            xhr.setRequestHeader("Accept", "application/json");
-            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.addEventListener("readystatechange", function() {
+            if(this.readyState === 4) {
+                console.log(this.responseText);
+            }
+            });
 
-            xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                console.log(xhr.responseText);
-            }};
-
-            var data = `{
-            "geojson": `+JSON.stringify(pointData)+`,
-            }`;
+            xhr.open("POST", "http://cloudgis.in/r_spatial_function.php");
 
             xhr.send(data);
+
+            xhr.onload = function() {
+            if (xhr.status != 200) { // analyze HTTP status of the response
+                alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+            } else { // show the result
+                alert(`Done, got ${xhr.response.length} bytes`);
+                alert(`${xhr.response}`); // response is the server response
+                //window.open("http://cloudgis.in/"+`${xhr.responseText}`+"result.txt", '_blank');
+            }
+            };
         </script>
     </body>
 </html>

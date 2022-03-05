@@ -1,10 +1,17 @@
 import geojson
-with open('school_points.geojson') as f:
+import sys
+
+fileName = sys.argv[1]
+nocache = fileName.split("data")[0]
+with open(fileName) as f:
     gj = geojson.load(f)
 
 i = 0
 for feature in gj['features']:
     i = i+1
 
-print(i)
+f = open((nocache+"result.txt"), "w")
+f.write(str(i))
+f.close()
 
+print(i)
