@@ -2,8 +2,10 @@
   "dependencies": {
     "@turf/buffer": "^6.5.0",
     "@turf/collect": "^6.5.0",
+    "greiner-hormann": "^1.4.2",
     "leaflet-dialog": "^1.0.5",
     "leaflet-loader": "^0.0.3",
+    "leaflet-mouse-position": "^1.2.0",
     "leaflet-notifications": "^1.0.7"
   }
 }

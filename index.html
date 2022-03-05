@@ -10,7 +10,7 @@
         <link rel="stylesheet" href="https://unpkg.com/native-toast@2.0.0/dist/native-toast.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
         <link rel="stylesheet" href="node_modules/leaflet-loader/leaflet-loader.css"/>
-        <link rel="stylesheet" href="node_modules/mouse_position/L.Control.MousePosition.css"/>
+        <link rel="stylesheet" href="node_modules/leaflet-mouse-position/src/L.Control.MousePosition.css"/>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.12.0/css/ol.css" type="text/css">
         <script src="https://kit.fontawesome.com/387047fbfe.js" crossorigin="anonymous"></script>
         <style>
@@ -45,7 +45,12 @@
         <!--<script src="outTurf.js"></script>-->
         <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
         <script src='node_modules/leaflet-loader/leaflet-loader.js'></script>
-        <script src='node_modules/mouse_position/L.Control.MousePosition.js'></script>
+        <script src='node_modules/leaflet-mouse-position/src/L.Control.MousePosition.js'></script>
+        <script src="node_modules/greiner-hormann/dist/greiner-hormann.leaflet.min.js"></script>
+        <script src="https://d3js.org/d3-voronoi.v1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6"></script>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src="leaflet-partition-master/dist/leaflet-partition.min.js"></script>
         <!--<input style="margin-left: 10px;" type="button" id="Btn1" value="Add New Layer" onclick="showToast('You added a layer');" class="btnStyle span3"/>
         <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
         <input type="button" id="Btn3" value="Save" class="btnStyle span3"/>
@@ -72,6 +77,22 @@
             L.control.mousePosition().addTo(map);
             //controlLoader.show();
             //controlLoader.hide();
+
+            /*L.control.coordinates({
+                position:"bottomleft", //optional default "bootomright"
+                decimals:2, //optional default 4
+                decimalSeperator:".", //optional default "."
+                labelTemplateLat:"Latitude: {y}", //optional default "Lat: {y}"
+                labelTemplateLng:"Longitude: {x}", //optional default "Lng: {x}"
+                enableUserInput:true, //optional default true
+                useDMS:false, //optional default false
+                useLatLngOrder: true, //ordering of labels, default false-> lng-lat
+                markerType: L.marker, //optional default L.marker
+                markerProps: {}, //optional default {},
+                labelFormatterLng : function(lng){return lng+" lng"}, //optional default none,
+                labelFormatterLat : function(lat){return lat+" lat"}, //optional default none
+                customLabelFcn: function(latLonObj, opts) { "Geohash: " + encodeGeoHash(latLonObj.lat, latLonObj.lng)} //optional default none
+            }).addTo(map);*/
 
             map.createPane((layerIndex+"_layer"));
             map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
@@ -411,11 +432,14 @@
                 console.log(selectedLayerId);
                 console.log(selectedLayerIdLow);
 
+                //var intersection = greinerHormann.intersection(turf.featureCollection(attributeList[selectedLayerId]), turf.featureCollection(attributeList[selectedLayerIdLow]));
+                //console.log(intersection);
+                
                 // 1. Create a new XMLHttpRequest object
                 let xhr = new XMLHttpRequest();
                 //console.log(urlList[selectedLayerId]);
-                higherURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
-                lowerURL = urlList[selectedLayerIdLow].replaceAll('&','&amp;');
+                //higherURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
+                //lowerURL = urlList[selectedLayerIdLow].replaceAll('&','&amp;');
                 // 2. Configure it: GET-request for the URL /article/.../load
                 xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
                 var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
@@ -436,7 +460,7 @@
                 +  '<wps:Input>'
                 +    '<ows:Identifier>intersectionMode</ows:Identifier>'
                 +    '<wps:Data>'
-                +      '<wps:LiteralData>FIRST</wps:LiteralData>'
+                +      '<wps:LiteralData>SECOND</wps:LiteralData>'
                 +    '</wps:Data>'
                 +  '</wps:Input>'
                 +'</wps:DataInputs>'
@@ -470,7 +494,6 @@
                 } else {
                     alert(`Received ${event.loaded} bytes`); // no Content-Length
                 }*/
-
                 };
 
                 xhr.onerror = function() {
@@ -592,6 +615,7 @@
                     + "<h4>Select a point layer from below list</h4><br><br>"
                     + selectTag
                     + "<br><input type='text' id='bufferLayerName' placeholder='Give a name to this layer'/>"
+                    + "<br><input type='text' id='bufferLayerDistance' placeholder='Give buffer distance in meters'/>"
                     + "<br><br><button onclick='startBuffer();'>Start Processing</button>";
                     return this._div;
                 };
@@ -633,7 +657,7 @@
             function startBuffer() {
                 var selectedLayerId = document.getElementById('layerselect').value;
                 var bufferLayerName = document.getElementById('bufferLayerName').value;
-
+                var bufferLayerDistance = document.getElementById('bufferLayerDistance').value/1000000;
                 // 1. Create a new XMLHttpRequest object
                 let xhr = new XMLHttpRequest();
                 console.log([selectedLayerId]);
@@ -651,7 +675,7 @@
                 +    '<wps:Input>'
                 +      '<ows:Identifier>distance</ows:Identifier>'
                 +      '<wps:Data>'
-                +        '<wps:LiteralData>0.005</wps:LiteralData>'
+                +        '<wps:LiteralData>'+ bufferLayerDistance +'</wps:LiteralData>'
                 +      '</wps:Data>'
                 +    '</wps:Input>'
                 +  '</wps:DataInputs>'
@@ -707,15 +731,74 @@
                 var voronoiLayerName = document.getElementById('voronoiLayerName').value;
                 var pointList = [];
                 var voronoiList = [];
+                var vPointList = [];
+                var bbox = turf.bbox({type: 'FeatureCollection',
+                features: attributeList[selectedLayerId]});
+                console.log(bbox);
                 for(let i = 0; i < attributeList[selectedLayerId].length; i++) {
-                    point = turf.point([attributeList[selectedLayerId][i]["properties"]["longitude"], attributeList[selectedLayerId][i]["properties"]["latitude"]],{name: attributeList[selectedLayerId][i]["properties"]["schcd"]});
+                    //point = turf.point([attributeList[selectedLayerId][i]["properties"]["latitude"], attributeList[selectedLayerId][i]["properties"]["longitude"]],{name: attributeList[selectedLayerId][i]["properties"]["schcd"]});
+                    point = [attributeList[selectedLayerId][i]["properties"]["latitude"],attributeList[selectedLayerId][i]["properties"]["longitude"]];
                     pointList.push(point);
+                    //console.log(attributeList[selectedLayerId][i]["properties"]["latitude"]);
+                    //console.log(attributeList[selectedLayerId][i]["properties"]["longitude"]);
+                   //vPointList.push(L.latLng(attributeList[selectedLayerId][i]["properties"]["latitude"], attributeList[selectedLayerId][i]["properties"]["longitude"]));
                 }
-                var pointFeatures = turf.featureCollection(pointList);
+                const delaunay = d3.Delaunay.from(pointList);
+                const voronoi = delaunay.voronoi(bbox);
+                console.log(voronoi.render());
+
+                //D3 to leaflet projection functions
+                // Reposition the SVG to cover the features.
+                function reset() {
+                    var bounds = path.bounds(statesData),
+                        topLeft = bounds[0],
+                        bottomRight = bounds[1];
+
+                    svg .attr("width", bottomRight[0] - topLeft[0])
+                        .attr("height", bottomRight[1] - topLeft[1])
+                        .style("left", topLeft[0] + "px")
+                        .style("top", topLeft[1] + "px");
+
+                    g   .attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+                    feature.attr("d", path);
+                }
+
+                // Use Leaflet to implement a D3 geometric transformation.
+                function projectPoint(x, y) {
+                    var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+                    this.stream.point(point.x, point.y);
+                }
+
+                var svg = d3.select(map.getPanes().overlayPane).append("svg"),
+                g = svg.append("g").attr("class", "leaflet-zoom-hide");
+
+                var transform = d3.geoTransform({point: projectPoint}),
+                    path = d3.geoPath().projection(transform);
+
+                var feature = g.selectAll("path")
+                .data(voronoi.render())
+                .enter().append("path");
+
+                map.on("viewreset", reset);
+                map.on("zoom",reset);
+                reset();
+                /*var pointFeatures = turf.featureCollection(pointList);
+                console.log(vPointList);
+                const options = {
+                    type: "voronoi",
+                    pathStyleOption: {
+                        color: "blue"
+                    }
+                };
+                const partition = L.partition(options);
+                partition.setData(vPointList);
+                console.log(partition);
+                partition.addTo(map);
                 //console.log(pointFeatures);
                 //voronoiList = attributeList[selectedLayerId][i];
                 //voronoiList.push(attributeList[selectedLayerId][i]);
-                var voronoi = turf.voronoi(pointFeatures,{bbox: [82, 25, 84, 26]});
+                var voronoi = turf.voronoi(pointFeatures,{bbox: bbox});
                 console.log(voronoi);
                 /*L.geoJSON(voronoi, {
                     style: {
@@ -723,7 +806,7 @@
                         color: colors[layerIndex%10],
                     },
                 }).addTo(map);*/
-                addPolygonLayerFromOperation(voronoi,voronoiLayerName);
+                //addPolygonLayerFromOperation(JSON.stringify(voronoi),voronoiLayerName);*/
 
             }
 
