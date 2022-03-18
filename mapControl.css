@@ -286,6 +286,66 @@ table {
     width:400px;
 }
 
+.standarddeviationalellipsedialog {
+    padding: 8px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,1);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: black;
+    display: block;
+    overflow-y: auto;
+    overflow-x:auto;
+    height:400px;
+    width:400px;
+}
+
+.nearestneighboranalysisdialog {
+    padding: 8px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,1);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: black;
+    display: block;
+    overflow-y: auto;
+    overflow-x:auto;
+    height:400px;
+    width:400px;
+}
+
+.ripleykfunctiondialog {
+    padding: 8px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,1);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: black;
+    display: block;
+    overflow-y: auto;
+    overflow-x:auto;
+    height:400px;
+    width:400px;
+}
+
+.bboxdialog {
+    padding: 8px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,1);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: black;
+    display: block;
+    overflow-y: auto;
+    overflow-x:auto;
+    height:400px;
+    width:400px;
+}
+
 .voronoidialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;

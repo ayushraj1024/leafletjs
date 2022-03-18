@@ -1,0 +1,33 @@
+0.018141518707097373
+0.0
+0.0019224641052595166
+[[0.00930484]
+ [0.        ]
+ [0.001     ]
+ ...
+ [0.00069395]
+ [0.00158933]
+ [0.00276363]]
+0.0019224641052595166
+[[ 0.70710678 -0.70710678]
+ [ 0.70710678 -0.70710678]
+ [ 0.70710678 -0.70710678]
+ ...
+ [ 0.70710678 -0.70710678]
+ [ 0.70710678 -0.70710678]
+ [ 0.70710678 -0.70710678]]
+support multiprocessing.
+/usr/lib/python3/dist-packages/sklearn/externals/joblib.py:1: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+  import imp
+/usr/lib/python3/dist-packages/sklearn/utils/validation.py:37: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+  LARGE_SPARSE_SUPPORTED = LooseVersion(scipy_version) >= '0.14.0'
+Traceback (most recent call last):
+  File "python_ripley_k_function.py", line 33, in <module>
+    kt = k_test(a, support=100, keep_simulations=True)
+  File "/usr/local/lib/python3.7/dist-packages/pointpats/distance_statistics.py", line 850, in k_test
+    n_simulations=n_simulations,
+  File "/usr/local/lib/python3.7/dist-packages/pointpats/distance_statistics.py", line 582, in _ripley_test
+    rep_support, simulations_i = stat_function(random_i, **core_kwargs)
+  File "/usr/local/lib/python3.7/dist-packages/pointpats/distance_statistics.py", line 435, in k
+    n_pairs_less_than_d = (upper_tri_distances < support.reshape(-1, 1)).sum(axis=1)
+numpy.core._exceptions.MemoryError: Unable to allocate 568. MiB for an array with shape (100, 5952975) and data type bool

@@ -151,16 +151,6 @@
                 document.getElementById("bufferdialog").style.display = "none";
                 document.getElementById("bufferdialog").remove();
             }
-
-            function hideWPSCountDialog() {
-                document.getElementById("wpscountdialog").style.display = "none";
-                document.getElementById("wpscountdialog").remove();
-            }
-
-            function hideVoronoiDialog() {
-                document.getElementById("voronoidialog").style.display = "none";
-                document.getElementById("voronoidialog").remove();
-            }
             
             layerButtonControl.onAdd = function (map) {
                 this._div = L.DomUtil.create('div', 'mapbuttons'); // create a div with a class "layers"
@@ -199,8 +189,7 @@
                 + "<br><br><hr><h4>Or enter a custom OGC Webservice URL below:</h4>"
                 + "<textarea type='text' rows='10' cols='40' placeholder='Enter OGC URL' id='ogcurl'></textarea>"
                 + "<br><br><input placeholder='Enter a name for this layer' type='text' id='ogcname'/>"
-                + "<h4>And then press one of the below buttons:</h4>"
-                + "<button onclick='getInputValueAndImportPointLayerFromSDI();'>Point Layer</button>&nbsp;<button onclick='getInputValueAndImportLineLayerFromSDI();'>Line Layer</button>&nbsp;<button onclick='getInputValueAndImportPolygonLayerFromSDI();'>Polygon Layer</button>"
+                + "<br><br><button onclick='getInputValueAndImportLayerFromSDI();'>Add Layer</button>&nbsp;"
                 + "<h5>To learn how to write OGC filters visit this link:</h5>"
                 + "<a href='https://mapserver.gis.umn.edu/nl_NL/ogc/filter_encoding.html'>https://mapserver.gis.umn.edu/nl_NL/ogc/filter_encoding.html</a>";
                 return this._div;
@@ -214,11 +203,15 @@
                 this._div = L.DomUtil.create('div', 'processingtoolbox');
                 this._div.id = "processingtoolboxid";
                 this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>"
-                + "<a href='#' onclick='buffer();'>Buffer</a>"
-                + "<br><a href='#' onclick='voronoi();'><s>Voronoi Polygons</s></a>"
-                + "<br><a href='#' onclick='wpsCount();'>Count</a>"
-                + "<br><a href='#' onclick='wpsIntersection();'>Intersection</a>"
-                + "<br><a href='#' onclick='wpsUnion();'>Union</a>";
+                + "<a href='#' onclick='buffer();'>Buffer</a>&nbsp;<img src='images/geoserver_logo.png' width=60 height=auto></img>"
+                + "<br><a href='#' onclick='voronoi();'>Voronoi Polygons</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
+                + "<br><a href='#' onclick='bbox();'>Bbox</a>&nbsp;<img src='images/turf_logo.png' width=14 height=auto></img>"
+                + "<br><a href='#' onclick='wpsCount();'>Count</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
+                + "<br><a href='#' onclick='wpsIntersection();'>Intersection</a>&nbsp;<img src='images/geoserver_logo.png' width=60 height=auto></img>"
+                + "<br><a href='#' onclick='wpsUnion();'>Union</a>&nbsp;<img src='images/geoserver_logo.png' width=60 height=auto></img>"
+                + "<br><a href='#' onclick='standardDeviationalEllipse();'>Standard Deviational Ellipse</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
+                + "<br><a href='#' onclick='nearestNeighborAnalysis();'>Nearest Neighbor Analysis</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
+                + "<br><a href='#' onclick='ripleyKFunction();'>Ripley K Function</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>";
                 return this._div;
             };
             processingToolbox.addTo(map);
@@ -252,7 +245,7 @@
             function wpsUnion() {
                 var wpsUnionDialog = L.control({position: 'topright'});
             
-                var selectTag = "<label for='layers'>Selet a higher order layer:</label>"
+                var selectTag = "<label for='layers'>Select a vector layer:</label>"
                 + "<select name='layers' id='layerselect'>";
                 for(let i = 0;i < attributeList.length; i++)
                 {
@@ -267,7 +260,7 @@
                 }
                 selectTag = selectTag + "</select>";
 
-                var selectTag2 = "<label for='layerslow'>Selet a lower order layer:</label>"
+                var selectTag2 = "<label for='layerslow'>Select a vector layer:</label>"
                 + "<select name='layerslow' id='layerselectlow'>";
                 for(let i = 0;i < attributeList.length; i++)
                 {
@@ -308,34 +301,70 @@
                 console.log(selectedLayerId);
                 console.log(selectedLayerIdLow);
 
+                var typeOfHigherOrderGeometry = turf.getType(attributeList[selectedLayerId][0]);
+                var typeOfLowerOrderGeometry = turf.getType(attributeList[selectedLayerIdLow][0]);
+
+                if(typeOfHigherOrderGeometry == "Point" || typeOfHigherOrderGeometry == "MultiPoint") {
+                    if(typeOfLowerOrderGeometry != "Point" && typeOfLowerOrderGeometry != "MultiPoint") {
+                        swal({
+                                        title: "The chosen layers should have the same geometry",
+                                        icon: "warning",
+                                        });
+                        controlLoader.hide();
+                        return;
+                    }
+                }
+
+                if(typeOfHigherOrderGeometry == "Line" || typeOfHigherOrderGeometry == "MultiLineString" || typeOfHigherOrderGeometry == "MultiLinestring") {
+                    if(typeOfLowerOrderGeometry != "Line" && typeOfLowerOrderGeometry != "MultiLineString" && typeOfLowerOrderGeometry != "MultiLinestring") {
+                        swal({
+                                        title: "The chosen layers should have the same geometry",
+                                        icon: "warning",
+                                        });
+                        controlLoader.hide();
+                        return;
+                    }
+                }
+
+                if(typeOfHigherOrderGeometry == "Polygon" || typeOfHigherOrderGeometry == "MultiPolygon" || typeOfHigherOrderGeometry == "MultiPolygons") {
+                    if(typeOfLowerOrderGeometry != "Polygon" && typeOfLowerOrderGeometry != "MultiPolygon" && typeOfLowerOrderGeometry != "MultiPolygons" ) {
+                        swal({
+                                        title: "The chosen layers should have the same geometry",
+                                        icon: "warning",
+                                        });
+                        controlLoader.hide();
+                        return;
+                    }
+                }
+
                 // 1. Create a new XMLHttpRequest object
                 let xhr = new XMLHttpRequest();
                 //console.log(urlList[selectedLayerId]);
-                higherURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
-                lowerURL = urlList[selectedLayerIdLow].replaceAll('&','&amp;');
                 // 2. Configure it: GET-request for the URL /article/.../load
                 xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
-                var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
+                var xmlBodyUnion = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
                 + '<ows:Identifier>vec:UnionFeatureCollection</ows:Identifier>'
                 + '<wps:DataInputs>'
-                + '<wps:Input>'
-                +    '<ows:Identifier>first</ows:Identifier>'
-                +   '<wps:Reference mimeType="application/json" xlink:href="http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson" method="GET"/>'
-                + '</wps:Input>'
-                + '<wps:Input>'
-                +   '<ows:Identifier>second</ows:Identifier>'
-                +   '<wps:Reference mimeType="application/json" xlink:href="http://52.91.190.127:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Avillage_boundary_wgs84&amp;outputFormat=application%2Fjson" method="GET"/>'
-                +  '</wps:Input>'
-                + '</wps:DataInputs>'
-                + '<wps:ResponseForm>'
-                + '<wps:RawDataOutput mimeType="application/json">'
-                +   '<ows:Identifier>result</ows:Identifier>'
-                + '</wps:RawDataOutput>'
-                + '</wps:ResponseForm>'
+                +    '<wps:Input>'
+                +      '<ows:Identifier>first</ows:Identifier>'
+                +      '<wps:Data>'
+                +        '<wps:ComplexData mimeType="application/json"><![CDATA['+ JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])) +']]></wps:ComplexData></wps:Data>'
+                +    '</wps:Input>'
+                +    '<wps:Input>'
+                +      '<ows:Identifier>second</ows:Identifier>'
+                +      '<wps:Data>'
+                +        '<wps:ComplexData mimeType="application/json"><![CDATA['+ JSON.stringify(turf.featureCollection(attributeList[selectedLayerIdLow])) +']]></wps:ComplexData></wps:Data>'
+                +    '</wps:Input>'
+                +  '</wps:DataInputs>'
+                +  '<wps:ResponseForm>'
+                +    '<wps:RawDataOutput mimeType="application/json">'
+                +      '<ows:Identifier>result</ows:Identifier>'
+                +    '</wps:RawDataOutput>'
+                +  '</wps:ResponseForm>'
                 +'</wps:Execute>';
 
-                console.log(xmlBodyCount);
-                xhr.send(xmlBodyCount);
+                console.log(xmlBodyUnion);
+                xhr.send(xmlBodyUnion);
 
                 // 4. This will be called after the response is received
                 xhr.onload = function() {
@@ -343,11 +372,17 @@
                     //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
                 } else { // show the result
                     //alert(`Done, got ${xhr.response.length} bytes`);
-                    controlLoader.show();
                     console.log("Count is: "+`${xhr.response}`); // response is the server response
-                    wpsIntersectionResult = `${xhr.response}`;
+                    wpsUnionResult = `${xhr.response}`;
                     console.log(wpsUnionResult);
-                    addPointLayerFromOperation(JSON.parse(wpsUnionResult),wpsUnionLayerName);
+                    var typeOfGeometry = turf.getType(JSON.parse(wpsUnionResult)["features"][0]);
+                    if(typeOfGeometry == "Point" || typeOfGeometry == "MultiPoint") {
+                        addPointLayerFromOperation(JSON.parse(wpsUnionResult),wpsUnionLayerName);
+                    } else if(typeOfGeometry == "Line" || typeOfGeometry == "MultiLineString" || typeOfGeometry == "MultiLineString") {
+                        addLineLayerFromOperation(JSON.parse(wpsUnionResult),wpsUnionLayerName);
+                    } else if(typeOfGeometry == "Polygon" || typeOfGeometry == "MultiPolygon" || typeOfGeometry == "MultiPolygons") {
+                        addPolygonLayerFromOperation(JSON.parse(wpsUnionResult),wpsUnionLayerName);
+                    }
                 }
                 };
 
@@ -432,6 +467,46 @@
                 console.log(selectedLayerId);
                 console.log(selectedLayerIdLow);
 
+                if(typeOfHigherOrderGeometry == "Point" || typeOfHigherOrderGeometry == "MultiPoint") {
+                    if(typeOfLowerOrderGeometry == "Line" ||
+                     typeOfLowerOrderGeometry == "MultiLineString" ||
+                     typeOfLowerOrderGeometry == "MultiLinestring" ||
+                     typeOfLowerOrderGeometry == "Polygon" ||
+                     typeOfLowerOrderGeometry == "MultiPolygon" ||
+                     typeOfLowerOrderGeometry == "MultiPolygons") {
+                        swal({
+                                        title: "The lower order layer should have a lower order geometry",
+                                        icon: "warning",
+                                        });
+                        controlLoader.hide();
+                        return;
+                    }
+                }
+
+                if(typeOfHigherOrderGeometry == "Line" || typeOfHigherOrderGeometry == "MultiLineString" || typeOfHigherOrderGeometry == "MultiLinestring") {
+                    if(typeOfLowerOrderGeometry != "Polygon" ||
+                     typeOfLowerOrderGeometry != "MultiPolygon" ||
+                     typeOfLowerOrderGeometry != "MultiPolygons") {
+                        swal({
+                                        title: "The chosen layers should have the same geometry",
+                                        icon: "warning",
+                                        });
+                        controlLoader.hide();
+                        return;
+                    }
+                }
+
+                if(typeOfHigherOrderGeometry == "Polygon" || typeOfHigherOrderGeometry == "MultiPolygon" || typeOfHigherOrderGeometry == "MultiPolygons") {
+                    /*if(typeOfLowerOrderGeometry != "Polygon" && typeOfLowerOrderGeometry != "MultiPolygon" && typeOfLowerOrderGeometry != "MultiPolygons" ) {
+                        swal({
+                                        title: "The chosen layers should have the same geometry",
+                                        icon: "warning",
+                                        });
+                        controlLoader.hide();
+                        return;
+                    }*/
+                }
+
                 //var intersection = greinerHormann.intersection(turf.featureCollection(attributeList[selectedLayerId]), turf.featureCollection(attributeList[selectedLayerIdLow]));
                 //console.log(intersection);
                 
@@ -484,7 +559,14 @@
                     console.log("Count is: "+`${xhr.response}`); // response is the server response
                     wpsIntersectionResult = `${xhr.response}`;
                     console.log(wpsIntersectionResult);
-                    addPointLayerFromOperation(JSON.parse(wpsIntersectionResult),wpsIntersectionLayerName);
+                    var typeOfGeometry = turf.getType(JSON.parse(wpsIntersectionResult)["features"][0]);
+                    if(typeOfGeometry == "Point" || typeOfGeometry == "MultiPoint") {
+                        addPointLayerFromOperation(JSON.parse(wpsIntersectionResult),wpsIntersectionLayerName);
+                    } else if(typeOfGeometry == "Line" || typeOfGeometry == "MultiLineString" || typeOfGeometry == "MultiLineString") {
+                        addLineLayerFromOperation(JSON.parse(wpsIntersectionResult),wpsIntersectionLayerName);
+                    } else if(typeOfGeometry == "Polygon" || typeOfGeometry == "MultiPolygon" || typeOfGeometry == "MultiPolygons") {
+                        addPolygonLayerFromOperation(JSON.parse(wpsIntersectionResult),wpsIntersectionLayerName);
+                    }
                 }
                 };
 
@@ -501,12 +583,246 @@
                 };
                 
             }
-            //<<< WPS Intersection Function
+
+            //<<< Standard Deviational Ellipse
+
+            function hideStandardDeviationalEllipseDialog() {
+                document.getElementById("standarddeviationalellipsedialog").style.display = "none";
+                document.getElementById("standarddeviationalellipsedialog").remove();
+            }
+
+            function standardDeviationalEllipse() {
+                var standardDeviationalEllipseDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Select a vector layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                standardDeviationalEllipseDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'standarddeviationalellipsedialog');
+                    this._div.id = "standarddeviationalellipsedialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideStandardDeviationalEllipseDialog();'>Close</a>"
+                    + "<br><h3>Standard Deviational Ellipse</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br><br><button onclick='startStandardDeviationalEllipse();'>Start Processing</button>";
+                    return this._div;
+                };
+                standardDeviationalEllipseDialog.addTo(map);
+            }
+
+            function startStandardDeviationalEllipse() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                //var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
+
+                //Python Processing >>>
+                controlLoader.show();
+                var data = new FormData();
+                data.append("geojson", JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])));
+                data.append("nocache", "Yes");
+
+                var xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
+
+                xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    console.log(this.responseText);
+                }
+                });
+
+                xhr.open("POST", "http://cloudgis.in/php_standard_deviational_ellipse.php");
+
+                xhr.send(data);
+
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    controlLoader.hide();
+                    //alert(`${xhr.response}`); // response is the server response
+                    window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                }
+                };
+                //<<< Python Processing
+            }
+
+            //<<< Standard Deviational Ellipse
+
+            //Nearest Neighbor Analysis >>>
+
+            function hideNearestNeighborAnalysisDialog() {
+                document.getElementById("nearestneighboranalysisdialog").style.display = "none";
+                document.getElementById("nearestneighboranalysisdialog").remove();
+            }
+
+            function nearestNeighborAnalysis() {
+                var nearestNeighborAnalysisDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Select a vector layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                nearestNeighborAnalysisDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'nearestneighboranalysisdialog');
+                    this._div.id = "nearestneighboranalysisdialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideNearestNeighborAnalysisDialog();'>Close</a>"
+                    + "<br><h3>Nearest Neighbor Analysis</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br><br><button onclick='startNearestNeighborAnalysis();'>Start Processing</button>";
+                    return this._div;
+                };
+                nearestNeighborAnalysisDialog.addTo(map);
+            }
+
+            function startNearestNeighborAnalysis() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                //var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
+
+                //Python Processing >>>
+                controlLoader.show();
+                var data = new FormData();
+                data.append("geojson", JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])));
+                data.append("nocache", "Yes");
+
+                var xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
+
+                xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    console.log(this.responseText);
+                }
+                });
+
+                xhr.open("POST", "http://cloudgis.in/php_nearest_neighbor_analysis.php");
+
+                xhr.send(data);
+
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    controlLoader.hide();
+                    //alert(`${xhr.response}`); // response is the server response
+                    window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                }
+                };
+                //<<< Python Processing
+            }
+
+            //<<< Nearest Neighbor Analysis
+
+            //Ripley K Function >>>
+
+            function hideRipleyKFunctionDialog() {
+                document.getElementById("ripleykfunctiondialog").style.display = "none";
+                document.getElementById("ripleykfunctiondialog").remove();
+            }
+
+            function ripleyKFunction() {
+                var ripleyKFunctionDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Select a vector layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                ripleyKFunctionDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'ripleykfunctiondialog');
+                    this._div.id = "ripleykfunctiondialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideRipleyKFunctionDialog();'>Close</a>"
+                    + "<br><h3>Ripley K Function</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br><br><button onclick='startRipleyKFunction();'>Start Processing</button>";
+                    return this._div;
+                };
+                ripleyKFunctionDialog.addTo(map);
+            }
+
+            function startRipleyKFunction() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                //var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
+
+                //Python Processing >>>
+                controlLoader.show();
+                var data = new FormData();
+                data.append("geojson", JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])));
+                data.append("nocache", "Yes");
+
+                var xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
+
+                xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    console.log(this.responseText);
+                }
+                });
+
+                xhr.open("POST", "http://cloudgis.in/php_ripley_k_function.php");
+
+                xhr.send(data);
+
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    controlLoader.hide();
+                    //alert(`${xhr.response}`); // response is the server response
+                    window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                }
+                };
+                //<<< Python Processing
+            }
+
+            //<<< Ripley K Function
+
+            //<<< WPS Count
+
+            function hideWPSCountDialog() {
+                document.getElementById("wpscountdialog").style.display = "none";
+                document.getElementById("wpscountdialog").remove();
+            }
 
             function wpsCount() {
                 var wpsCountDialog = L.control({position: 'topright'});
             
-                var selectTag = "<label for='layers'>Selet a point layer:</label>"
+                var selectTag = "<label for='layers'>Selet a vector layer:</label>"
                 + "<select name='layers' id='layerselect'>";
                 for(let i = 0;i < attributeList.length; i++)
                 {
@@ -528,7 +844,6 @@
                     + "<br><h3>Count</h3>"
                     + "<h4>Select a vector layer from below list</h4><br><br>"
                     + selectTag
-                    + "<br><input type='text' id='wpsCountLayerName' placeholder='Give a name to this layer'/>"
                     + "<br><br><button onclick='startWPSCount();'>Start Processing</button>";
                     return this._div;
                 };
@@ -537,57 +852,41 @@
 
             function startWPSCount() {
                 var selectedLayerId = document.getElementById('layerselect').value;
-                var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
+                //var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
 
-                // 1. Create a new XMLHttpRequest object
-                let xhr = new XMLHttpRequest();
-                console.log(urlList[selectedLayerId]);
-                countURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
-                // 2. Configure it: GET-request for the URL /article/.../load
-                xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
-                var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
-                +  '<ows:Identifier>vec:Count</ows:Identifier>'
-                +  '<wps:DataInputs>'
-                +    '<wps:Input>'
-                +      '<ows:Identifier>features</ows:Identifier>'
-                +      '<wps:Reference mimeType="application/json" xlink:href="'+ countURL +'" method="GET"/>'
-                +    '</wps:Input>'
-                +  '</wps:DataInputs>'
-                +  '<wps:ResponseForm>'
-                +    '<wps:RawDataOutput>'
-                +      '<ows:Identifier>result</ows:Identifier>'
-                +    '</wps:RawDataOutput>'
-                +  '</wps:ResponseForm>'
-                + '</wps:Execute>';
+                //Python Processing >>>
+                controlLoader.show();
+                var data = new FormData();
+                data.append("geojson", JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])));
+                data.append("nocache", "Yes");
 
-                console.log(xmlBodyCount);
-                xhr.send(xmlBodyCount);
+                var xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
 
-                // 4. This will be called after the response is received
+                xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    console.log(this.responseText);
+                }
+                });
+
+                xhr.open("POST", "http://cloudgis.in/r_spatial_function.php");
+
+                xhr.send(data);
+
                 xhr.onload = function() {
                 if (xhr.status != 200) { // analyze HTTP status of the response
-                    //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
                 } else { // show the result
                     //alert(`Done, got ${xhr.response.length} bytes`);
-                    alert("Count is: "+`${xhr.response}`); // response is the server response
+                    controlLoader.hide();
+                    alert(`${xhr.response}`); // response is the server response
+                    //window.open("http://cloudgis.in/"+`${xhr.responseText}`+"result.txt", '_blank');
                 }
                 };
-
-                xhr.onprogress = function(event) {
-                /*if (event.lengthComputable) {
-                    alert(`Received ${event.loaded} of ${event.total} bytes`);
-                } else {
-                    alert(`Received ${event.loaded} bytes`); // no Content-Length
-                }*/
-
-                };
-
-                xhr.onerror = function() {
-                alert("Request failed");
-                };
-                
-                //addPolygonLayerFromOperation(bufferList,bufferLayerName);
+                //<<< Python Processing
             }
+
+            //<<< WPS Count
 
             function buffer() {
                 var bufferDialog = L.control({position: 'topright'});
@@ -622,6 +921,13 @@
                 bufferDialog.addTo(map);
             }
 
+            // Voronoi Diagram >>>
+
+            function hideVoronoiDialog() {
+                document.getElementById("voronoidialog").style.display = "none";
+                document.getElementById("voronoidialog").remove();
+            }
+
             function voronoi() {
                 var voronoiDialog = L.control({position: 'topright'});
             
@@ -654,10 +960,146 @@
                 voronoiDialog.addTo(map);
             }
 
+            function startVoronoi() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                var voronoiLayerName = document.getElementById('voronoiLayerName').value;
+                /*var pointList = [];
+                var voronoiList = [];
+                var vPointList = [];
+                console.log(attributeList[selectedLayerId]);
+                for(let i = 0; i < attributeList[selectedLayerId].length; i++) {
+                    point = turf.point([attributeList[selectedLayerId][i]["geometry"]["coordinates"][0], attributeList[selectedLayerId][i]["geometry"]["coordinates"][1]]);
+                    //point = [attributeList[selectedLayerId][i]["properties"]["latitude"],attributeList[selectedLayerId][i]["properties"]["longitude"]];
+                    console.log(point["geometry"]["coordinates"] != null );
+                    pointList.push(point);
+                    //console.log(attributeList[selectedLayerId][i]["properties"]["latitude"]);
+                    //console.log(attributeList[selectedLayerId][i]["properties"]["longitude"]);
+                   //vPointList.push(L.latLng(attributeList[selectedLayerId][i]["properties"]["latitude"], attributeList[selectedLayerId][i]["properties"]["longitude"]));
+                }
+               
+                var result = pointList.reduce((unique, o) => {
+                    if(!unique.some(obj => obj.geometry.coordinates[0] === o.geometry.coordinates[0] && obj.geometry.coordinates[1] === o.geometry.coordinates[1])) {
+                        unique.push(o);
+                    }
+                    return unique;
+                },[]);
+                console.log(result);
+                var pointFeatures = turf.featureCollection(result);
+                var bbox = turf.bbox(pointFeatures);
+                console.log(bbox);
+                console.log(pointFeatures);
+                /*console.log(vPointList);
+                const options = {
+                    type: "voronoi",
+                    pathStyleOption: {
+                        color: "blue"
+                    }
+                };
+                const partition = L.partition(options);
+                partition.setData(vPointList);
+                console.log(partition);
+                partition.addTo(map);*/
+                //console.log(pointFeatures);
+                //voronoiList = attributeList[selectedLayerId][i];
+                //voronoiList.push(attributeList[selectedLayerId][i]);
+                //var voronoi = turf.voronoi(pointFeatures, {bbox: bbox});
+                /*voronoi["features"].forEach(function myFunction(item) {
+                    console.log(item);
+                });
+                //console.log(voronoi);
+                addPolygonLayerFromOperation(voronoi,voronoiLayerName);*/
+
+                //Python Processing >>>
+                controlLoader.show();
+                var data = new FormData();
+                data.append("geojson", JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])));
+                data.append("nocache", "Yes");
+
+                var xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
+
+                xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    console.log(this.responseText);
+                }
+                });
+
+                xhr.open("POST", "http://cloudgis.in/php_voronoi_polygons.php");
+
+                xhr.send(data);
+
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    controlLoader.hide();
+                    //alert(`${xhr.response}`); // response is the server response
+                    //window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                    addPolygonLayerFromSDI("http://cloudgis.in/"+`${xhr.responseText}`,voronoiLayerName);
+                }
+                };
+                //<<< Python Processing
+
+            }
+
+            //<<< Voronoi Diagram
+
+            // Bbox >>>
+
+            function hideBboxDialog() {
+                document.getElementById("bboxdialog").style.display = "none";
+                document.getElementById("bboxdialog").remove();
+            }
+
+            function bbox() {
+                var bboxDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Selet a vector layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                bboxDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'bboxdialog');
+                    this._div.id = "bboxdialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideBboxDialog();'>Close</a>"
+                    + "<br><h3>Bbox</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br><input type='text' id='bboxLayerName' placeholder='Give a name to this layer'/>"
+                    + "<br><br><button onclick='startBbox();'>Start Processing</button>";
+                    return this._div;
+                };
+                bboxDialog.addTo(map);
+            }
+
+            function startBbox() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                var bboxLayerName = document.getElementById('bboxLayerName').value;
+
+                var bbox = turf.bbox(turf.featureCollection(attributeList[selectedLayerId]));
+                var bboxPolygon = turf.bboxPolygon(bbox);
+                addPolygonLayerFromOperation(turf.featureCollection([bboxPolygon]),bboxLayerName);
+
+            }
+
+            //<<< Bbox
+
             function startBuffer() {
                 var selectedLayerId = document.getElementById('layerselect').value;
                 var bufferLayerName = document.getElementById('bufferLayerName').value;
-                var bufferLayerDistance = document.getElementById('bufferLayerDistance').value/1000000;
+                var bufferLayerDistance = document.getElementById('bufferLayerDistance').value/100000;
                 // 1. Create a new XMLHttpRequest object
                 let xhr = new XMLHttpRequest();
                 console.log([selectedLayerId]);
@@ -726,90 +1168,6 @@
 
             }
 
-            function startVoronoi() {
-                var selectedLayerId = document.getElementById('layerselect').value;
-                var voronoiLayerName = document.getElementById('voronoiLayerName').value;
-                var pointList = [];
-                var voronoiList = [];
-                var vPointList = [];
-                var bbox = turf.bbox({type: 'FeatureCollection',
-                features: attributeList[selectedLayerId]});
-                console.log(bbox);
-                for(let i = 0; i < attributeList[selectedLayerId].length; i++) {
-                    //point = turf.point([attributeList[selectedLayerId][i]["properties"]["latitude"], attributeList[selectedLayerId][i]["properties"]["longitude"]],{name: attributeList[selectedLayerId][i]["properties"]["schcd"]});
-                    point = [attributeList[selectedLayerId][i]["properties"]["latitude"],attributeList[selectedLayerId][i]["properties"]["longitude"]];
-                    pointList.push(point);
-                    //console.log(attributeList[selectedLayerId][i]["properties"]["latitude"]);
-                    //console.log(attributeList[selectedLayerId][i]["properties"]["longitude"]);
-                   //vPointList.push(L.latLng(attributeList[selectedLayerId][i]["properties"]["latitude"], attributeList[selectedLayerId][i]["properties"]["longitude"]));
-                }
-                const delaunay = d3.Delaunay.from(pointList);
-                const voronoi = delaunay.voronoi(bbox);
-                console.log(voronoi.render());
-
-                //D3 to leaflet projection functions
-                // Reposition the SVG to cover the features.
-                function reset() {
-                    var bounds = path.bounds(statesData),
-                        topLeft = bounds[0],
-                        bottomRight = bounds[1];
-
-                    svg .attr("width", bottomRight[0] - topLeft[0])
-                        .attr("height", bottomRight[1] - topLeft[1])
-                        .style("left", topLeft[0] + "px")
-                        .style("top", topLeft[1] + "px");
-
-                    g   .attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
-
-                    feature.attr("d", path);
-                }
-
-                // Use Leaflet to implement a D3 geometric transformation.
-                function projectPoint(x, y) {
-                    var point = map.latLngToLayerPoint(new L.LatLng(y, x));
-                    this.stream.point(point.x, point.y);
-                }
-
-                var svg = d3.select(map.getPanes().overlayPane).append("svg"),
-                g = svg.append("g").attr("class", "leaflet-zoom-hide");
-
-                var transform = d3.geoTransform({point: projectPoint}),
-                    path = d3.geoPath().projection(transform);
-
-                var feature = g.selectAll("path")
-                .data(voronoi.render())
-                .enter().append("path");
-
-                map.on("viewreset", reset);
-                map.on("zoom",reset);
-                reset();
-                /*var pointFeatures = turf.featureCollection(pointList);
-                console.log(vPointList);
-                const options = {
-                    type: "voronoi",
-                    pathStyleOption: {
-                        color: "blue"
-                    }
-                };
-                const partition = L.partition(options);
-                partition.setData(vPointList);
-                console.log(partition);
-                partition.addTo(map);
-                //console.log(pointFeatures);
-                //voronoiList = attributeList[selectedLayerId][i];
-                //voronoiList.push(attributeList[selectedLayerId][i]);
-                var voronoi = turf.voronoi(pointFeatures,{bbox: bbox});
-                console.log(voronoi);
-                /*L.geoJSON(voronoi, {
-                    style: {
-                        fillColor: colors[layerIndex%10],
-                        color: colors[layerIndex%10],
-                    },
-                }).addTo(map);*/
-                //addPolygonLayerFromOperation(JSON.stringify(voronoi),voronoiLayerName);*/
-
-            }
-
             function startFilter(indexOfLayer) {
                 //console.log("Filter started: "+indexOfLayer);
                 filterLayerName = document.getElementById('filterlayernameid').value;
@@ -851,6 +1209,29 @@
                 
             }
 
+            async function getInputValueAndImportLayerFromSDI() {
+                ogcURL = document.getElementById("ogcurl").value;
+                ogcName = document.getElementById("ogcname").value;
+                controlLoader.show();
+                await $.getJSON(ogcURL)
+                    .then(function (data) {
+                        controlLoader.hide();
+                        var typeOfGeometry = turf.getType(data["features"][0]);
+                        if(ogcName == null || ogcName == "") {
+                            ogcName = data["features"][0]["id"].split(".")[0];
+                        }
+                        if(typeOfGeometry == "Point" || typeOfGeometry == "MultiPoint") {
+                            addPointLayerFromSDI(ogcURL,ogcName);
+                        } else if(typeOfGeometry == "Line" || typeOfGeometry == "MultiLineString" || typeOfGeometry == "MultiLineString") {
+                            addLineLayerFromSDI(ogcURL,ogcName);
+                        } else if(typeOfGeometry == "Polygon" || typeOfGeometry == "MultiPolygon" || typeOfGeometry == "MultiPolygons") {
+                            addPolygonLayerFromSDI(ogcURL,ogcName);
+                        }
+
+                });
+                //
+                //addPointLayerFromSDI(ogcURL,ogcName);
+            }
             function getInputValueAndImportPointLayerFromSDI() {
                 ogcURL = document.getElementById("ogcurl").value;
                 ogcName = document.getElementById("ogcname").value;
