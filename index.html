@@ -72,7 +72,7 @@
             var colors = ["#C71585","#A52A2A","#8B008B","#006400","#00FFFF","#FF00FF","#FFE4E1","#2F4F4F","#D2691E","#696969"];
 
             var map = L.map('map',{renderer: L.canvas(),zoomControl: false}).setView([25.320021, 82.973564], 12);
-
+            
             var controlLoader = L.control.loader().addTo(map);
             L.control.mousePosition().addTo(map);
             //controlLoader.show();
@@ -211,7 +211,7 @@
                 + "<br><a href='#' onclick='wpsUnion();'>Union</a>&nbsp;<img src='images/geoserver_logo.png' width=60 height=auto></img>"
                 + "<br><a href='#' onclick='standardDeviationalEllipse();'>Standard Deviational Ellipse</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
                 + "<br><a href='#' onclick='nearestNeighborAnalysis();'>Nearest Neighbor Analysis</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
-                + "<br><a href='#' onclick='ripleyKFunction();'>Ripley K Function</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>";
+                + "<br><a href='#' onclick='ripleyKFunction();'>Ripley's K Function</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>";
                 return this._div;
             };
             processingToolbox.addTo(map);
@@ -779,6 +779,10 @@
                 //var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
 
                 //Python Processing >>>
+                swal({
+                                        title: "Please note that Ripley's K Function takes a lot of time to compute. Kindly keep your dataset small and wait for the processing to finish. You can dismiss this dialog.",
+                                        icon: "warning",
+                                        });
                 controlLoader.show();
                 var data = new FormData();
                 data.append("geojson", JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])));
