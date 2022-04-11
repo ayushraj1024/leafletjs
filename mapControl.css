@@ -69,10 +69,6 @@
     width: 100%;
     border: 1px solid red;
 }
-#map {
-    width: 100%;
-    height: 100%;
-}
 
 /* The Modal (background) */
 .modal {
@@ -171,8 +167,7 @@
 .filtertabledialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -203,8 +198,7 @@
 .filtertablediv {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -229,8 +223,7 @@ table {
 .bufferdialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -244,8 +237,7 @@ table {
 .wpscountdialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -259,8 +251,7 @@ table {
 .wpsuniondialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -274,8 +265,21 @@ table {
 .wpsintersectiondialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: black;
+    display: block;
+    overflow-y: auto;
+    overflow-x:auto;
+    height:400px;
+    width:400px;
+}
+
+.pythondifferencedialog {
+    padding: 8px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -289,8 +293,7 @@ table {
 .standarddeviationalellipsedialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -304,8 +307,7 @@ table {
 .nearestneighboranalysisdialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -319,8 +321,7 @@ table {
 .ripleykfunctiondialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -334,8 +335,7 @@ table {
 .bboxdialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;
@@ -349,8 +349,7 @@ table {
 .voronoidialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,1);
+    background-color: floralwhite;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     color: black;

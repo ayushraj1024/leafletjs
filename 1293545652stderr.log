@@ -1,0 +1,23 @@
+0.02616735999293703
+0.0
+0.003896778333746763
+[[0.01348258]
+ [0.001     ]
+ [0.001     ]
+ ...
+ [0.00400072]
+ [0.0042945 ]
+ [0.0042945 ]]
+0.003896778333746763
+[[ 0.70710678 -0.70710678]
+ [ 0.70710678 -0.70710678]
+ [ 0.70710678 -0.70710678]
+ ...
+ [ 0.70710678 -0.70710678]
+ [ 0.70710678 -0.70710678]
+ [ 0.70710678 -0.70710678]]
+er support multiprocessing.
+/usr/lib/python3/dist-packages/sklearn/externals/joblib.py:1: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+  import imp
+/usr/lib/python3/dist-packages/sklearn/utils/validation.py:37: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+  LARGE_SPARSE_SUPPORTED = LooseVersion(scipy_version) >= '0.14.0'

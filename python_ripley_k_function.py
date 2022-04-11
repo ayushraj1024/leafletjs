@@ -9,8 +9,6 @@ from pylab import figure, show,rand
 from scipy import stats
 import shapely
 import fiona
-#import seaborn
-#import contextily
 
 fileName = sys.argv[1]
 with open(fileName) as f:
@@ -20,7 +18,7 @@ nocache = fileName.split("data")[0]
 
 listArray = []
 for feature in gj['features']:
-    listArray.append([feature["properties"]["longitude"], feature["properties"]["latitude"]])
+    listArray.append([feature["geometry"]["coordinates"][0], feature["geometry"]["coordinates"][1]])
 
 pp = PointPattern(listArray)
 print(pp.max_nnd)
@@ -30,7 +28,7 @@ print(pp.nnd)
 print(pp.nnd.sum()/pp.n)
 a = np.array(listArray)
 print(stats.zscore(a,axis=1,ddof=1))
-kt = k_test(a, support=100, keep_simulations=True)
+kt = k_test(a, support=10, keep_simulations=True)
 
 
 # plot all the simulations with very fine lines
@@ -43,8 +41,8 @@ plt.plot(kt.support, np.median(kt.simulations, axis=0), color='cyan',
 plt.plot(kt.support, kt.statistic, label = 'observed', color='red')
 
 # clean up labels and axes
-#plt.set_xlabel('distance')
-#plt.set_ylabel('% of nearest neighbor\ndistances shorter')
+plt.xlabel('distance (x1000000 meters)')
+plt.ylabel('K(d)')
 plt.legend()
 #ax[0].set_xlim(0,2000)
 #plt.set_title(r"Ripley's $K(d)$ function")

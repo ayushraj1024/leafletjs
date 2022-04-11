@@ -18,7 +18,7 @@ nocache = fileName.split("data")[0]
 
 listArray = []
 for feature in gj['features']:
-    listArray.append([feature["properties"]["longitude"], feature["properties"]["latitude"]])
+    listArray.append([feature["geometry"]["coordinates"][0], feature["geometry"]["coordinates"][1]])
 
 pp = PointPattern(listArray)
 print(pp.max_nnd)
@@ -43,7 +43,7 @@ ax[0].plot(gt.support, np.median(gt.simulations, axis=0), color='cyan',
 ax[0].plot(gt.support, gt.statistic, label = 'observed', color='red')
 
 # clean up labels and axes
-ax[0].set_xlabel('distance')
+ax[0].set_xlabel('distance (x100000 meters)')
 ax[0].set_ylabel('% of nearest neighbor\ndistances shorter')
 ax[0].legend()
 #ax[0].set_xlim(0,2000)

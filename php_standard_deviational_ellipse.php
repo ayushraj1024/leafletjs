@@ -9,5 +9,5 @@
     echo $output;*/
        
     exec('python -W ignore python_standard_deviational_ellipse.py '. $nocache .'data.geojson >'. $nocache .'stderr.log 2>' . $nocache . 'stderr.log', $out, $status);
-    echo ($nocache.'_sd_ellipse.png');
+    echo ($nocache);
 ?>

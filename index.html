@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>MNNIT Cloud GIS</title>
+        <title>Cloud GIS And Data Analysis</title>
         <link rel="icon" type="image/png" href="images/mnnit_logo_square.png">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -13,6 +13,8 @@
         <link rel="stylesheet" href="node_modules/leaflet-mouse-position/src/L.Control.MousePosition.css"/>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.12.0/css/ol.css" type="text/css">
         <script src="https://kit.fontawesome.com/387047fbfe.js" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"/>
         <style>
             body {
                 padding: 0;
@@ -24,7 +26,7 @@
             }
         </style>
     </head>
-    <body>
+    <body style="height:100%;background-color: floralwhite;">
         <script>L_PREFER_CANVAS = true;</script>
         <script src="https://unpkg.com/native-toast@2.0.0/dist/native-toast.min.js"></script>
         <script src="nativeToast.js"></script>
@@ -55,8 +57,44 @@
         <input type="button" id="Btn2" value="Processing Toolbox" class="btnStyle span3"/>
         <input type="button" id="Btn3" value="Save" class="btnStyle span3"/>
         <input type="button" id="Btn4" value="Close" class="btnStyle span3"/>-->
-        <div id="map"></div>
+       
+            <div class="row" style="height:50px;width:100%">
+                <div class="col-sm-12">
+                    <h2>Cloud GIS And Data Analysis</h2>
+                </div>
+            </div>
+            <div class="row" style="margin-bottom:10px; padding-left:20px;height:40px;width:100%;">
+                <a href='#' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: bisque;" onclick='showLayerAddingDialog();'><h6>Add New Layer</h6></a>&nbsp;&nbsp;<a href='#' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: bisque;"><h6 onclick='showProcessingToolbox();'>Processing Toolbox</h6></a>
+            </div>
+            <div class="row" style="width:100%;height: calc( 100vh - 110px );">
+                <div class="col-sm-3">
+                    <div class="row" style="border: 2px solid black; overflow-y:auto; height:250px;">
+                        <div class="col-sm-12" id="toolbox_3">
 
+                        </div>
+                    </div>
+                    <div class="row" style="border: 2px solid black; overflow-y:auto; height:calc(100vh - 360px);">
+                        <div class="col-sm-12" style="display: flex; flex-direction: column-reverse;" id="layerControlList">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6" id="map" style="border: 2px solid black;"></div>
+                <div class="col-sm-3" id="toolboxes">
+                    <div class="row" style="border: 2px solid black; overflow-y:auto; height:250px;">
+                        <div class="col-sm-12" id="toolbox_1">
+
+                        </div>
+                    </div>
+                    <div class="row" style="border: 2px solid black; overflow-y:auto; height:calc(100vh - 360px);">
+                        <div class="col-sm-12" id="toolbox_2">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+      
+        
         <script>
             
             var layerList = [];
@@ -75,24 +113,6 @@
             
             var controlLoader = L.control.loader().addTo(map);
             L.control.mousePosition().addTo(map);
-            //controlLoader.show();
-            //controlLoader.hide();
-
-            /*L.control.coordinates({
-                position:"bottomleft", //optional default "bootomright"
-                decimals:2, //optional default 4
-                decimalSeperator:".", //optional default "."
-                labelTemplateLat:"Latitude: {y}", //optional default "Lat: {y}"
-                labelTemplateLng:"Longitude: {x}", //optional default "Lng: {x}"
-                enableUserInput:true, //optional default true
-                useDMS:false, //optional default false
-                useLatLngOrder: true, //ordering of labels, default false-> lng-lat
-                markerType: L.marker, //optional default L.marker
-                markerProps: {}, //optional default {},
-                labelFormatterLng : function(lng){return lng+" lng"}, //optional default none,
-                labelFormatterLat : function(lat){return lat+" lat"}, //optional default none
-                customLabelFcn: function(latLonObj, opts) { "Geohash: " + encodeGeoHash(latLonObj.lat, latLonObj.lng)} //optional default none
-            }).addTo(map);*/
 
             map.createPane((layerIndex+"_layer"));
             map.getPane((layerIndex+"_layer")).style.zIndex = (layerIndex*layerMultiplier);
@@ -109,19 +129,9 @@
             urlList.push(null);
             layerOrderList.push(layerIndex*layerMultiplier);
 
-            //Add Title
-            var mapTitle = L.control({position: 'topleft'});
-
-            mapTitle.onAdd = function (map) {
-                this._div = L.DomUtil.create('div', 'mapTitle');
-                this._div.innerHTML = ('<h1>MNNIT(2020GI07) Cloud GIS</h1>'); // create a div with a class "layers"
-                return this._div;
-            };
-            mapTitle.addTo(map);
 
             //Add layer control
-            var layerButtonControl = L.control({position: 'topleft'});
-            var attributeTable = L.control({position: 'topleft'});
+            //var attributeTable = L.control({position: 'topleft'});
             var filterTable = L.control({position: 'topright'});
             var filterInput = L.control({position: 'topleft'});
 
@@ -151,22 +161,15 @@
                 document.getElementById("bufferdialog").style.display = "none";
                 document.getElementById("bufferdialog").remove();
             }
-            
-            layerButtonControl.onAdd = function (map) {
-                this._div = L.DomUtil.create('div', 'mapbuttons'); // create a div with a class "layers"
-                this._div.innerHTML = "<a href='#' class='maplinks' onclick='showLayerAddingDialog();'><h4 class='mapbutton'><b>Add New Layer</b></h4></a>&nbsp;&nbsp;<a href='#' class='maplinks'><h4 class='mapbutton' onclick='showProcessingToolbox();'><b>Processing Toolbox</b></h4></a>";
-                return this._div;
-            };
-            layerButtonControl.addTo(map);
 
 
             //Add layer adding dialog box
-            var layerAddingDialogBox = L.control({position: 'topright'});
+            //var layerAddingDialogBox = L.control({position: 'topright'});
 
-            layerAddingDialogBox.onAdd = function (map) {
-                this._div = L.DomUtil.create('div', 'layeraddingdialog');
-                this._div.id = "layeraddingdialogid";
-                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4>"
+            //layerAddingDialogBox.onAdd = function (map) {
+                //this._div = L.DomUtil.create('div', 'layeraddingdialog');
+                //this._div.id = "layeraddingdialogid";
+                document.getElementById("toolbox_1").innerHTML += "<div id='layeraddingdialogid'><a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4>"
                 + "<div class='externalwfsselection'><h5>Cloud GIS WFS</h5>"
                 + "<select name='cloudgiswfs' id='cloudgiswfsid'>"
                 + "<option value = 'http://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson'>Varanasi School Points</option>"
@@ -191,49 +194,39 @@
                 + "<br><br><input placeholder='Enter a name for this layer' type='text' id='ogcname'/>"
                 + "<br><br><button onclick='getInputValueAndImportLayerFromSDI();'>Add Layer</button>&nbsp;"
                 + "<h5>To learn how to write OGC filters visit this link:</h5>"
-                + "<a href='https://mapserver.gis.umn.edu/nl_NL/ogc/filter_encoding.html'>https://mapserver.gis.umn.edu/nl_NL/ogc/filter_encoding.html</a>";
-                return this._div;
-            };
-            layerAddingDialogBox.addTo(map);
+                + "<a href='https://mapserver.gis.umn.edu/nl_NL/ogc/filter_encoding.html'>https://mapserver.gis.umn.edu/nl_NL/ogc/filter_encoding.html</a></div>";
+            // };
+            //layerAddingDialogBox.addTo(map);
 
             //Add processing toolbox
-            var processingToolbox = L.control({position: 'topright'});
+            //var processingToolbox = L.control({position: 'topright'});
 
-            processingToolbox.onAdd = function (map) {
-                this._div = L.DomUtil.create('div', 'processingtoolbox');
-                this._div.id = "processingtoolboxid";
-                this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>"
+            //processingToolbox.onAdd = function (map) {
+                //this._div = L.DomUtil.create('div', 'processingtoolbox');
+                //this._div.id = "processingtoolboxid";
+                document.getElementById("toolbox_2").innerHTML += "<div id='processingtoolboxid'><a href='#' style='text-decoration:none;color:black;' onclick='hideProcessingToolbox();'>Close</a><br><h3>Processing Toolbox</h3><h4>Choose an operation below:</h4>"
                 + "<a href='#' onclick='buffer();'>Buffer</a>&nbsp;<img src='images/geoserver_logo.png' width=60 height=auto></img>"
                 + "<br><a href='#' onclick='voronoi();'>Voronoi Polygons</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
                 + "<br><a href='#' onclick='bbox();'>Bbox</a>&nbsp;<img src='images/turf_logo.png' width=14 height=auto></img>"
                 + "<br><a href='#' onclick='wpsCount();'>Count</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
+                + "<br><a href='#' onclick='pythonDifference();'>Primitive Polygon Difference (Buffer or BBOX only)</a>"
                 + "<br><a href='#' onclick='wpsIntersection();'>Intersection</a>&nbsp;<img src='images/geoserver_logo.png' width=60 height=auto></img>"
                 + "<br><a href='#' onclick='wpsUnion();'>Union</a>&nbsp;<img src='images/geoserver_logo.png' width=60 height=auto></img>"
                 + "<br><a href='#' onclick='standardDeviationalEllipse();'>Standard Deviational Ellipse</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
                 + "<br><a href='#' onclick='nearestNeighborAnalysis();'>Nearest Neighbor Analysis</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
-                + "<br><a href='#' onclick='ripleyKFunction();'>Ripley's K Function</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>";
-                return this._div;
-            };
-            processingToolbox.addTo(map);
+                + "<br><a href='#' onclick='ripleyKFunction();'>Ripley's K Function</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img></div>";
+                //return this._div;
+            //};
+            //processingToolbox.addTo(map);
 
-            //Add layer control
-            var layerControl = L.control({position: 'bottomleft'});
-
-            layerControl.onAdd = function (map) {
-                this._div = L.DomUtil.create('div', 'layers'); // create a div with a class "layers"
-                return this._div;
-            };
-            
-            layerControl.addLayer = function (layer,layerName) {
+            function addLayerToControl (layer,layerName) {
                 var currentLayer = this;
                 (function (_layerIndex) {
-                    currentLayer._div.innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex+"_toggle"+'" src="images/svg/eye.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_up" src="images/svg/arrow_up.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_down" src="images/svg/arrow_down.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_attributetable" src="images/svg/table.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex + '_save" src="images/svg/save.svg" width=13></img></a></b></p></div>');
+                    document.getElementById("layerControlList").innerHTML += ('<div class="layer_elements" id="'+ layerIndex +'_layer"><p><b>'+ layerName +'&nbsp;<a href="#" id="'+ layerIndex+"_delete" +'"><img src="images/svg/trash.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex+"_toggle"+'" src="images/svg/eye.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_up" src="images/svg/arrow_up.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_down" src="images/svg/arrow_down.svg" width=13 ></img></a>&nbsp;<a href="#"><img id="'+ layerIndex +'_attributetable" src="images/svg/table.svg" width=13></img></a>&nbsp;<a href="#"><img id="'+ layerIndex + '_save" src="images/svg/save.svg" width=13></img></a></b></p></div>');
                 })(layerIndex);
-                //console.log(layerList);
             };
-
-            layerControl.addTo(map);
-            layerControl.addLayer(OSMLayer,"OSM Standard");
+            
+            addLayerToControl(OSMLayer,"OSM Standard");
             layerIndex++;
 
             //WPS Union Function >>>
@@ -467,6 +460,9 @@
                 console.log(selectedLayerId);
                 console.log(selectedLayerIdLow);
 
+                var typeOfHigherOrderGeometry = turf.getType(attributeList[selectedLayerId][0]);
+                var typeOfLowerOrderGeometry = turf.getType(attributeList[selectedLayerIdLow][0]);
+
                 if(typeOfHigherOrderGeometry == "Point" || typeOfHigherOrderGeometry == "MultiPoint") {
                     if(typeOfLowerOrderGeometry == "Line" ||
                      typeOfLowerOrderGeometry == "MultiLineString" ||
@@ -584,7 +580,146 @@
                 
             }
 
-            //<<< Standard Deviational Ellipse
+            // Python Difference >>>
+            function hidePythonDifferenceDialog() {
+                document.getElementById("pythondifferencedialog").style.display = "none";
+                document.getElementById("pythondifferencedialog").remove();
+            }
+
+            function pythonDifference() {
+                var pythonDifferenceDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Select a vector layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+
+                var selectTag2 = "<label for='layerslow'>Selet a vector layer:</label>"
+                + "<select name='layerslow' id='layerselectlow'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag2 = selectTag2 + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag2 = selectTag2 + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                pythonDifferenceDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'pythondifferencedialog');
+                    this._div.id = "pythondifferencedialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hidePythonDifferenceDialog();'>Close</a>"
+                    + "<br><h3>Difference</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br>"
+                    + selectTag2
+                    + "<br><input type='text' id='pythonDifferenceLayerName' placeholder='Give a name to this layer'/>"
+                    + "<br><br><button onclick='startPythonDifference();'>Start Processing</button>";
+                    return this._div;
+                };
+                pythonDifferenceDialog.addTo(map);
+            }
+
+            function startPythonDifference() {
+                controlLoader.show();
+                var selectedLayerId = document.getElementById('layerselect').value;
+                var selectedLayerIdLow = document.getElementById('layerselectlow').value;
+                var pythonDifferenceLayerName = document.getElementById('pythonDifferenceLayerName').value;
+                var pythonDifferenceResult = null;
+
+                console.log(attributeList[selectedLayerId]);
+                console.log(attributeList[selectedLayerIdLow]);
+
+                var typeOfHigherOrderGeometry = attributeList[selectedLayerId][0]["geometry"]["type"];
+                var typeOfLowerOrderGeometry = attributeList[selectedLayerIdLow][0]["geometry"]["type"];
+
+                if(typeOfHigherOrderGeometry != "Polygon" && typeOfHigherOrderGeometry != "MultiPolygon")
+                {
+                    swal({
+                                        title: "Layers should be polygon layers only",
+                                        icon: "warning",
+                                        });
+                        controlLoader.hide();
+                        return;
+                }
+
+                if(typeOfLowerOrderGeometry != "Polygon" && typeOfLowerOrderGeometry != "MultiPolygon") {
+                    swal({
+                                        title: "Layers should be polygon layers only",
+                                        icon: "warning",
+                                        });
+                        controlLoader.hide();
+                        return;
+                }
+
+                var polygon1 = turf.polygon(attributeList[selectedLayerId][0]["geometry"]["coordinates"]);
+                var polygon2 = turf.polygon(attributeList[selectedLayerIdLow][0]["geometry"]["coordinates"]);
+
+                var difference = turf.difference(polygon1, polygon2);
+                differenceFeatureCollection = turf.featureCollection([difference]);
+
+                addPolygonLayerFromOperation(differenceFeatureCollection,pythonDifferenceLayerName);
+                console.log(difference);
+                controlLoader.hide();
+                /*//Python Processing >>>
+                controlLoader.show();
+                var data = new FormData();
+                data.append("geojson", JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])));
+                data.append("geojson_1",JSON.stringify(turf.featureCollection(attributeList[selectedLayerIdLow])));
+                data.append("nocache", "Yes");
+
+                var xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
+
+                xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    console.log(this.responseText);
+                }
+                });
+
+                xhr.open("POST", "http://cloudgis.in/php_difference.php");
+
+                xhr.send(data);
+
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    controlLoader.hide();
+                    //alert(`${xhr.response}`); // response is the server response
+                    //window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                    if(typeOfGeometry == "Point" || typeOfGeometry == "MultiPoint") {
+                        addPointLayerFromSDI("http://cloudgis.in/"+`${xhr.responseText}`,pythonDifferenceLayerName);
+                    } else if(typeOfGeometry == "Line" || typeOfGeometry == "MultiLineString" || typeOfGeometry == "MultiLineString") {
+                        addLineLayerFromSDI("http://cloudgis.in/"+`${xhr.responseText}`,pythonDifferenceLayerName);
+                    } else if(typeOfGeometry == "Polygon" || typeOfGeometry == "MultiPolygon" || typeOfGeometry == "MultiPolygons") {
+                        addPolygonLayerFromSDI("http://cloudgis.in/"+`${xhr.responseText}`,pythonDifferenceLayerName);
+                    }
+                    //addPolygonLayerFromSDI("http://cloudgis.in/"+`${xhr.responseText}`,voronoiLayerName);
+                }
+                };
+                //<<< Python Processing*/
+                
+            }
+            //<<< Python Difference
+
+            //Standard Deviational Ellipse >>>
 
             function hideStandardDeviationalEllipseDialog() {
                 document.getElementById("standarddeviationalellipsedialog").style.display = "none";
@@ -616,6 +751,7 @@
                     + "<br><h3>Standard Deviational Ellipse</h3>"
                     + "<h4>Select a vector layer from below list</h4><br><br>"
                     + selectTag
+                    + "<br><input type='text' id='standardDeviationalEllipseLayerName' placeholder='Give a name to this layer'/>"
                     + "<br><br><button onclick='startStandardDeviationalEllipse();'>Start Processing</button>";
                     return this._div;
                 };
@@ -624,7 +760,7 @@
 
             function startStandardDeviationalEllipse() {
                 var selectedLayerId = document.getElementById('layerselect').value;
-                //var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
+                var standardDeviationalEllipseLayerName = document.getElementById('standardDeviationalEllipseLayerName').value;
 
                 //Python Processing >>>
                 controlLoader.show();
@@ -652,7 +788,8 @@
                     //alert(`Done, got ${xhr.response.length} bytes`);
                     controlLoader.hide();
                     //alert(`${xhr.response}`); // response is the server response
-                    window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                    addPolygonLayerFromSDI("http://cloudgis.in/"+`${xhr.responseText}`+"_standard_deviational_ellipse.geojson",standardDeviationalEllipseLayerName);
+                    window.open("http://cloudgis.in/"+`${xhr.responseText}`+"_sd_ellipse.png", '_blank');
                 }
                 };
                 //<<< Python Processing
@@ -913,13 +1050,13 @@
                 bufferDialog.onAdd = function (map) {
                     this._div = L.DomUtil.create('div', 'bufferdialog');
                     this._div.id = "bufferdialog";
-                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideBufferDialog();'>Close</a>"
+                    this._div.innerHTML = "<div id='bufferdialog'><a href='#' style='text-decoration:none;color:black;' onclick='hideBufferDialog();'>Close</a>"
                     + "<br><h3>Buffer</h3>"
                     + "<h4>Select a point layer from below list</h4><br><br>"
                     + selectTag
                     + "<br><input type='text' id='bufferLayerName' placeholder='Give a name to this layer'/>"
                     + "<br><input type='text' id='bufferLayerDistance' placeholder='Give buffer distance in meters'/>"
-                    + "<br><br><button onclick='startBuffer();'>Start Processing</button>";
+                    + "<br><br><button onclick='startBuffer();'>Start Processing</button></div>";
                     return this._div;
                 };
                 bufferDialog.addTo(map);
@@ -1103,9 +1240,14 @@
             function startBuffer() {
                 var selectedLayerId = document.getElementById('layerselect').value;
                 var bufferLayerName = document.getElementById('bufferLayerName').value;
-                var bufferLayerDistance = document.getElementById('bufferLayerDistance').value/100000;
+                var bufferLayerDistance = document.getElementById('bufferLayerDistance').value;
+                
+                featureCollection = turf.featureCollection(attributeList[selectedLayerId]);
+                var buffered = turf.buffer(featureCollection, bufferLayerDistance, {units: 'meters'});
+                console.log(buffered);
+                addPolygonLayerFromOperation(buffered,bufferLayerName);
                 // 1. Create a new XMLHttpRequest object
-                let xhr = new XMLHttpRequest();
+                /*let xhr = new XMLHttpRequest();
                 console.log([selectedLayerId]);
                 //countURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
                 // 2. Configure it: GET-request for the URL /article/.../load
@@ -1155,11 +1297,11 @@
                     alert(`Received ${event.loaded} bytes`); // no Content-Length
                 }*/
 
-                };
+                //};
 
-                xhr.onerror = function() {
+                /*xhr.onerror = function() {
                 alert("Request failed");
-                };
+                };*/
 
                 /*var bufferList = [];
                 for(let i = 0; i < attributeList[selectedLayerId].length; i++) {
@@ -1289,7 +1431,7 @@
                 toggleList.push(1);
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
-                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                await addLayerToControl(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
                 controlLoader.hide();
@@ -1326,7 +1468,7 @@
                 toggleList.push(1);
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
-                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                await addLayerToControl(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
                 controlLoader.hide();
@@ -1363,7 +1505,7 @@
                 toggleList.push(1);
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
-                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                await addLayerToControl(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
                 controlLoader.hide();
@@ -1412,7 +1554,7 @@
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
                 urlList.push(url);
-                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                await addLayerToControl(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
                 controlLoader.hide();
@@ -1455,7 +1597,7 @@
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
                 urlList.push(url);
-                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                await addLayerToControl(geojsonLayer,givenLayerName);
                 layerIndex++;
                 addOnClickListenersToLayers();
                 controlLoader.hide();
@@ -1497,7 +1639,7 @@
                 toggleList.push(1);
                 layerNameList.push(givenLayerName);
                 layerOrderList.push(layerIndex*layerMultiplier);
-                await layerControl.addLayer(geojsonLayer,givenLayerName);
+                await addLayerToControl(geojsonLayer,givenLayerName);
                 urlList.push(url);
                 layerIndex++;
                 addOnClickListenersToLayers();
@@ -1527,12 +1669,12 @@
                                 _attributeTableButton.addEventListener('click',function(){
                                     
                                     //Making Attribute Table >>>
-                                    attributeTable.onAdd = function (map) {
+                                    //attributeTable.onAdd = function (map) {
                                         controlLoader.show();
-                                        this._div = L.DomUtil.create('div', 'attributetabledialog');
-                                        this._div.id = "attributetabledialogid";
+                                        //this._div = L.DomUtil.create('div', 'attributetabledialog');
+                                        //this._div.id = "attributetabledialogid";
                                         if(attributeList[_i] == null) {
-                                            this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideAttributeTableDialog();'>Close</a><br><h3>Attribute Table</h3><h4>The chosen layer has the following attribute data:</h4>No Attributes";
+                                            document.getElementById("toolbox_3").innerHTML = "<div id='attributetabledialogid'><a href='#' style='text-decoration:none;color:black;' onclick='hideAttributeTableDialog();'>Close</a><br><h3>Attribute Table</h3><h4>The chosen layer has the following attribute data:</h4>No Attributes</div>";
                                         } else {
                                             var k;
                                             var table = "<table><thead><tr>";
@@ -1548,11 +1690,11 @@
                                                 table = table + "</tr>";
                                             }
                                             table = table + "</table>";
-                                            this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideAttributeTableDialog();'>Close</a><br><h3>Attribute Table</h3><h4>The chosen layer has the following attribute data:</h4>" + table;
+                                            document.getElementById("toolbox_3").innerHTML = "<div id='attributetabledialogid'><a href='#' style='text-decoration:none;color:black;' onclick='hideAttributeTableDialog();'>Close</a><br><h3>Attribute Table</h3><h4>The chosen layer has the following attribute data:</h4>" + table +"</div>";
                                         }
                                         controlLoader.hide();
-                                        return this._div;
-                                    };
+                                        //return this._div;
+                                    //};
                                     //<<< Making attribute table
 
                                     //Making filter table >>>
@@ -1587,7 +1729,7 @@
                                         return this._div;
                                     };
                                     //<<< Making filter table
-                                    attributeTable.addTo(map);
+                                    //attributeTable.addTo(map);
                                     filterTable.addTo(map);
 
                                     document.getElementById("attributetabledialogid").style.display = "block";

@@ -1,6 +1,6 @@
 <?php
-    ini_set('max_execution_time', 300);
-    set_time_limit (300); 
+    ini_set('max_execution_time', 1200);
+    set_time_limit (1200); 
     $nocache = rand();
     file_put_contents($nocache.'data.geojson', $_POST['geojson']);
     /*ob_start();
