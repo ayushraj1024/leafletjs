@@ -1,6 +1,0 @@
-1008820275_sd_ellipse.png
-rary config/cache directory at /tmp/matplotlib-ohrfcxnn because the default path (/usr/sbin/.config/matplotlib) is not a writable directory; it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
-/usr/lib/python3/dist-packages/sklearn/externals/joblib.py:1: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
-  import imp
-/usr/lib/python3/dist-packages/sklearn/utils/validation.py:37: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
-  LARGE_SPARSE_SUPPORTED = LooseVersion(scipy_version) >= '0.14.0'

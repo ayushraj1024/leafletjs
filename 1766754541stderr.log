@@ -1,1 +1,0 @@
-Matplotlib created a temporary config/cache directory at /tmp/matplotlib-1gl_kubq because the default path (/usr/sbin/.config/matplotlib) is not a writable directory; it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
