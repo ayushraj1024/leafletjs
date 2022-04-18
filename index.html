@@ -214,7 +214,8 @@
                 + "<br><a href='#' onclick='wpsUnion();'>Union</a>&nbsp;<img src='images/geoserver_logo.png' width=60 height=auto></img>"
                 + "<br><a href='#' onclick='standardDeviationalEllipse();'>Standard Deviational Ellipse</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
                 + "<br><a href='#' onclick='nearestNeighborAnalysis();'>Nearest Neighbor Analysis</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
-                + "<br><a href='#' onclick='ripleyKFunction();'>Ripley's K Function</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img></div>";
+                + "<br><a href='#' onclick='ripleyKFunction();'>Ripley's K Function</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img>"
+                + "<br><a href='#' onclick='LFunction();'>L Function</a>&nbsp;<img src='images/python_logo.png' width=14 height=auto></img></div>";
                 //return this._div;
             //};
             //processingToolbox.addTo(map);
@@ -952,6 +953,86 @@
             }
 
             //<<< Ripley K Function
+
+             //L Function >>>
+
+             function hideLFunctionDialog() {
+                document.getElementById("lfunctiondialog").style.display = "none";
+                document.getElementById("lfunctiondialog").remove();
+            }
+
+            function LFunction() {
+                var LFunctionDialog = L.control({position: 'topright'});
+            
+                var selectTag = "<label for='layers'>Select a vector layer:</label>"
+                + "<select name='layers' id='layerselect'>";
+                for(let i = 0;i < attributeList.length; i++)
+                {
+                    try {
+                        //if(attributeList[i][0]["geometry"]["type"] == "Point") {
+                            //console.log("Layer is a point layer");
+                            selectTag = selectTag + "<option value='" + i + "'>"+ layerNameList[i] +"</option>";
+                        //}
+                    } catch(err) {
+                        //console.log(err);
+                    }
+                }
+                selectTag = selectTag + "</select>";
+                //console.log(attributeList[1][0]["properties"]["latitude"]);
+                LFunctionDialog.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'lfunctiondialog');
+                    this._div.id = "lfunctiondialog";
+                    this._div.innerHTML = "<a href='#' style='text-decoration:none;color:black;' onclick='hideLFunctionDialog();'>Close</a>"
+                    + "<br><h3>L Function</h3>"
+                    + "<h4>Select a vector layer from below list</h4><br><br>"
+                    + selectTag
+                    + "<br><br><button onclick='startLFunction();'>Start Processing</button>";
+                    return this._div;
+                };
+                LFunctionDialog.addTo(map);
+            }
+
+            function startLFunction() {
+                var selectedLayerId = document.getElementById('layerselect').value;
+                //var wpsCountLayerName = document.getElementById('wpsCountLayerName').value;
+
+                //Python Processing >>>
+                swal({
+                                        title: "Please note that L Function takes a lot of time to compute. Kindly keep your dataset small and wait for the processing to finish. You can dismiss this dialog.",
+                                        icon: "warning",
+                                        });
+                controlLoader.show();
+                var data = new FormData();
+                data.append("geojson", JSON.stringify(turf.featureCollection(attributeList[selectedLayerId])));
+                data.append("nocache", "Yes");
+
+                var xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
+
+                xhr.addEventListener("readystatechange", function() {
+                if(this.readyState === 4) {
+                    console.log(this.responseText);
+                }
+                });
+
+                xhr.open("POST", "http://cloudgis.in/php_L_function.php");
+
+                xhr.send(data);
+
+                xhr.onload = function() {
+                if (xhr.status != 200) { // analyze HTTP status of the response
+                    alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+                } else { // show the result
+                    //alert(`Done, got ${xhr.response.length} bytes`);
+                    controlLoader.hide();
+                    //alert(`${xhr.response}`); // response is the server response
+                    window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                }
+                };
+                //<<< Python Processing
+            }
+
+            //<<< L Function
 
             //<<< WPS Count
 

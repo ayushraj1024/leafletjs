@@ -27,9 +27,7 @@ print(pp.mean_nnd)
 print(pp.nnd)
 print(pp.nnd.sum()/pp.n)
 a = np.array(listArray)
-print(stats.zscore(a,axis=1,ddof=1))
-kt = k_test(a, support=10, keep_simulations=True)
-
+kt = l_test(a, support=10, keep_simulations=True)
 
 # plot all the simulations with very fine lines
 plt.plot(kt.support, kt.simulations.T, color='k', alpha=.04)
@@ -42,9 +40,9 @@ plt.plot(kt.support, kt.statistic, label = 'observed', color='red')
 
 # clean up labels and axes
 plt.xlabel('distance (x1000000 meters)')
-plt.ylabel('K(d)')
+plt.ylabel('L(d)')
 plt.legend()
 #ax[0].set_xlim(0,2000)
 #plt.set_title(r"Ripley's $K(d)$ function")
 
-plt.savefig(nocache+"_ripley_k_function.png")
+plt.savefig(nocache+"_L_function.png")

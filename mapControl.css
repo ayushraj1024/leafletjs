@@ -304,6 +304,20 @@ table {
     width:400px;
 }
 
+.lfunctiondialog {
+    padding: 8px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background-color: floralwhite;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: black;
+    display: block;
+    overflow-y: auto;
+    overflow-x:auto;
+    height:400px;
+    width:400px;
+}
+
 .nearestneighboranalysisdialog {
     padding: 8px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
