@@ -27,7 +27,7 @@ print(pp.mean_nnd)
 print(pp.nnd)
 print(pp.nnd.sum()/pp.n)
 a = np.array(listArray)
-kt = l_test(a, support=10, keep_simulations=True)
+kt = l_test(a, support=10, keep_simulations=True, n_simulations=1000)
 
 # plot all the simulations with very fine lines
 plt.plot(kt.support, kt.simulations.T, color='k', alpha=.04)
@@ -39,7 +39,7 @@ plt.plot(kt.support, np.median(kt.simulations, axis=0), color='cyan',
 plt.plot(kt.support, kt.statistic, label = 'observed', color='red')
 
 # clean up labels and axes
-plt.xlabel('distance (x1000000 meters)')
+plt.xlabel('distance (x$10^5$ meters)')
 plt.ylabel('L(d)')
 plt.legend()
 #ax[0].set_xlim(0,2000)

@@ -13,6 +13,8 @@
         <link rel="stylesheet" href="node_modules/leaflet-mouse-position/src/L.Control.MousePosition.css"/>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.12.0/css/ol.css" type="text/css">
         <script src="https://kit.fontawesome.com/387047fbfe.js" crossorigin="anonymous"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"/>
         <style>
@@ -26,7 +28,7 @@
             }
         </style>
     </head>
-    <body style="height:100%;background-color: floralwhite;">
+    <body style="height:100%;background-color: lightblue;" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
         <script>L_PREFER_CANVAS = true;</script>
         <script src="https://unpkg.com/native-toast@2.0.0/dist/native-toast.min.js"></script>
         <script src="nativeToast.js"></script>
@@ -59,12 +61,36 @@
         <input type="button" id="Btn4" value="Close" class="btnStyle span3"/>-->
        
             <div class="row" style="height:50px;width:100%">
-                <div class="col-sm-12">
+                <div class="col-sm-10">
                     <h2>Cloud GIS And Data Analysis</h2>
                 </div>
             </div>
             <div class="row" style="margin-bottom:10px; padding-left:20px;height:40px;width:100%;">
-                <a href='#' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: bisque;" onclick='showLayerAddingDialog();'><h6>Add New Layer</h6></a>&nbsp;&nbsp;<a href='#' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: bisque;"><h6 onclick='showProcessingToolbox();'>Processing Toolbox</h6></a>
+                <a href='#' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: #A0AECD;" onclick='showLayerAddingDialog();'><h6>Add New Layer</h6></a>
+                &nbsp;&nbsp;<div class="dropdown">
+                    <button style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: #A0AECD;" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <h6>Processing Toolbox</h6>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a href='#'onclick='buffer();'>1. Buffer</a><br>
+                        <a href='#' onclick='voronoi();'>2. Voronoi Polygons</a><br>
+                        <a href='#' onclick='bbox();'>3. Bbox</a><br>
+                        <a href='#' onclick='wpsCount();'>4. Count</a><br>
+                        <a href='#' onclick='pythonDifference();'>5. Primitive Polygon Difference (Buffer or BBOX only)</a><br>
+                        <a href='#' onclick='wpsIntersection();'>6. Intersection</a><br>
+                        <a href='#' onclick='wpsUnion();'>7. Union</a><br>
+                        <a href='#' onclick='standardDeviationalEllipse();'>8. Standard Deviational Ellipse</a><br>
+                        <a href='#' onclick='nearestNeighborAnalysis();'>9. Nearest Neighbor Analysis</a><br>
+                        <a href='#' onclick='ripleyKFunction();'>10. Ripley's K Function</a><br>
+                        <a href='#' onclick='LFunction();'>11. L Function</a><br>
+                    </div>
+                  </div>
+                &nbsp;&nbsp;<a href='#' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: #A0AECD;"><h6 onclick='addPolygonLayerFromSDI("https://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Avillage_boundary_wgs84&amp;outputFormat=application%2Fjson","Varanasi Village Boundary");'>Boundary Map</h6></a>
+                &nbsp;&nbsp;<a href='#' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: #A0AECD;"><h6 onclick='addLineLayerFromSDI("https://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_road_network_wgs84&outputFormat=application%2Fjson","Varanasi Road Network");'>Road Network</h6></a>
+                &nbsp;&nbsp;<a href='#' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: #A0AECD;"><h6 onclick='addPointLayerFromSDI("https://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson","School Locations");'>School Locations</h6></a>
+                &nbsp;&nbsp;<a href='images/study_area_1.png' target="_blank" style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: #A0AECD;"><h6>Study Area</h6></a>
+                &nbsp;&nbsp;<a href='images/system_architecture_1.png' target="_blank" style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: #A0AECD;"><h6 onclick='showProcessingToolbox();'>System Architecture</h6></a>
+                &nbsp;&nbsp;<a href='mailto://ayushraj1024@gmail.com' style="padding:5px; border: 2px solid black; color: black; text-decoration: none; background-color: #A0AECD;"><h6 onclick='showProcessingToolbox();'>Contact Us</h6></a>
             </div>
             <div class="row" style="width:100%;height: calc( 100vh - 110px );">
                 <div class="col-sm-3">
@@ -172,9 +198,11 @@
                 document.getElementById("toolbox_1").innerHTML += "<div id='layeraddingdialogid'><a href='#' style='text-decoration:none;color:black;' onclick='hideLayerAddingDialog();'>Close</a><br><h3>Add New Layer</h3><h4>Choose from the below layers:</h4>"
                 + "<div class='externalwfsselection'><h5>Cloud GIS WFS</h5>"
                 + "<select name='cloudgiswfs' id='cloudgiswfsid'>"
-                + "<option value = 'http://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson'>Varanasi School Points</option>"
-                + "<option value = 'http://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Avillage_boundary_wgs84&amp;outputFormat=application%2Fjson'>Varanasi Village Boundary</option>"
-                + "<option value = 'http://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_roads_wgs84&outputFormat=application%2Fjson'>Varanasi Road Network</option>"
+                + "<option value = 'https://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Aschool_points_wgs84&amp;maxFeatures=3451&amp;outputFormat=application%2Fjson'>Varanasi School Points</option>"
+                + "<option value = 'https://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&outputFormat=application%2Fjson&Filter=%3CFilter%3E%3COr%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E3%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E5%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E6%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E7%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E8%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E9%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E10%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E11%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3C/Or%3E%3C/Filter%3E'>Varanasi Secondary School Points</option>"
+                + "<option value = 'https://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Aschool_points_wgs84&outputFormat=application%2Fjson&Filter=%3CFilter%3E%3COr%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E1%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E2%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3Eschcat%3C/PropertyName%3E%3CLiteral%3E4%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3C/Or%3E%3C/Filter%3E'>Varanasi Primary School Points</option>"
+                + "<option value = 'https://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=cite%3Avillage_boundary_wgs84&amp;outputFormat=application%2Fjson'>Varanasi Village Boundary</option>"
+                + "<option value = 'https://geoserver.cloudgis.in:8080/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3Avaranasi_road_network_wgs84&outputFormat=application%2Fjson'>Varanasi Road Network</option>"
                 + "</select>&nbsp;<a href='#' onclick='document.getElementById(\"ogcurl\").value = document.getElementById(\"cloudgiswfsid\").value;'><img src='images/svg/copy.svg' height=16 width=auto></a></div>"
                 + "<br><div class='externalwfsselection'><h5>Marine Regions WFS <a href='https://marineregions.org/webservices'>visit website</a></h5>"
                 + "<select name='marineregions' id='marineregionsid'>"
@@ -335,7 +363,7 @@
                 let xhr = new XMLHttpRequest();
                 //console.log(urlList[selectedLayerId]);
                 // 2. Configure it: GET-request for the URL /article/.../load
-                xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
+                xhr.open('POST', 'https://geoserver.cloudgis.in:8080/geoserver/wps');
                 var xmlBodyUnion = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
                 + '<ows:Identifier>vec:UnionFeatureCollection</ows:Identifier>'
                 + '<wps:DataInputs>'
@@ -513,7 +541,7 @@
                 //higherURL = urlList[selectedLayerId].replaceAll('&', '&amp;');
                 //lowerURL = urlList[selectedLayerIdLow].replaceAll('&','&amp;');
                 // 2. Configure it: GET-request for the URL /article/.../load
-                xhr.open('POST', 'http://geoserver.cloudgis.in:8080/geoserver/wps');
+                xhr.open('POST', 'https://geoserver.cloudgis.in:8080/geoserver/wps');
                 var xmlBodyCount = '<?xml version="1.0" encoding="UTF-8"?><wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">'
                 + '<ows:Identifier>vec:IntersectionFeatureCollection</ows:Identifier>'
                 + '<wps:DataInputs>'
@@ -778,7 +806,7 @@
                 }
                 });
 
-                xhr.open("POST", "http://cloudgis.in/php_standard_deviational_ellipse.php");
+                xhr.open("POST", "https://map.cloudgis.in/php_standard_deviational_ellipse.php");
 
                 xhr.send(data);
 
@@ -789,8 +817,8 @@
                     //alert(`Done, got ${xhr.response.length} bytes`);
                     controlLoader.hide();
                     //alert(`${xhr.response}`); // response is the server response
-                    addPolygonLayerFromSDI("http://cloudgis.in/"+`${xhr.responseText}`+"_standard_deviational_ellipse.geojson",standardDeviationalEllipseLayerName);
-                    window.open("http://cloudgis.in/"+`${xhr.responseText}`+"_sd_ellipse.png", '_blank');
+                    addPolygonLayerFromSDI("https://map.cloudgis.in/"+`${xhr.responseText}`+"_standard_deviational_ellipse.geojson",standardDeviationalEllipseLayerName);
+                    window.open("https://map.cloudgis.in/"+`${xhr.responseText}`+"_sd_ellipse.png", '_blank');
                 }
                 };
                 //<<< Python Processing
@@ -855,7 +883,7 @@
                 }
                 });
 
-                xhr.open("POST", "http://cloudgis.in/php_nearest_neighbor_analysis.php");
+                xhr.open("POST", "https://map.cloudgis.in/php_nearest_neighbor_analysis.php");
 
                 xhr.send(data);
 
@@ -866,7 +894,7 @@
                     //alert(`Done, got ${xhr.response.length} bytes`);
                     controlLoader.hide();
                     //alert(`${xhr.response}`); // response is the server response
-                    window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                    window.open("https://map.cloudgis.in/"+`${xhr.responseText}`, '_blank');
                 }
                 };
                 //<<< Python Processing
@@ -935,7 +963,7 @@
                 }
                 });
 
-                xhr.open("POST", "http://cloudgis.in/php_ripley_k_function.php");
+                xhr.open("POST", "https://map.cloudgis.in/php_ripley_k_function.php");
 
                 xhr.send(data);
 
@@ -946,7 +974,7 @@
                     //alert(`Done, got ${xhr.response.length} bytes`);
                     controlLoader.hide();
                     //alert(`${xhr.response}`); // response is the server response
-                    window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                    window.open("https://map.cloudgis.in/"+`${xhr.responseText}`, '_blank');
                 }
                 };
                 //<<< Python Processing
@@ -1015,7 +1043,7 @@
                 }
                 });
 
-                xhr.open("POST", "http://cloudgis.in/php_L_function.php");
+                xhr.open("POST", "https://map.cloudgis.in/php_L_function.php");
 
                 xhr.send(data);
 
@@ -1026,7 +1054,7 @@
                     //alert(`Done, got ${xhr.response.length} bytes`);
                     controlLoader.hide();
                     //alert(`${xhr.response}`); // response is the server response
-                    window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
+                    window.open("https://map.cloudgis.in/"+`${xhr.responseText}`, '_blank');
                 }
                 };
                 //<<< Python Processing
@@ -1091,7 +1119,7 @@
                 }
                 });
 
-                xhr.open("POST", "http://cloudgis.in/r_spatial_function.php");
+                xhr.open("POST", "https://map.cloudgis.in/r_spatial_function.php");
 
                 xhr.send(data);
 
@@ -1246,7 +1274,7 @@
                 }
                 });
 
-                xhr.open("POST", "http://cloudgis.in/php_voronoi_polygons.php");
+                xhr.open("POST", "https://map.cloudgis.in/php_voronoi_polygons.php");
 
                 xhr.send(data);
 
@@ -1258,7 +1286,7 @@
                     controlLoader.hide();
                     //alert(`${xhr.response}`); // response is the server response
                     //window.open("http://cloudgis.in/"+`${xhr.responseText}`, '_blank');
-                    addPolygonLayerFromSDI("http://cloudgis.in/"+`${xhr.responseText}`,voronoiLayerName);
+                    addPolygonLayerFromSDI("https://map.cloudgis.in/"+`${xhr.responseText}`,voronoiLayerName);
                 }
                 };
                 //<<< Python Processing
@@ -2035,6 +2063,54 @@
         }
 
         addOnClickListenersToLayers();
+
+        function dropHandler(ev) {
+            console.log('File(s) dropped');
+
+            // Prevent default behavior (Prevent file from being opened)
+            ev.preventDefault();
+
+            if (ev.dataTransfer.items) {
+                // Use DataTransferItemList interface to access the file(s)
+                for (let i = 0; i < ev.dataTransfer.items.length; i++) {
+                // If dropped items aren't files, reject them
+                if (ev.dataTransfer.items[i].kind === 'file') {
+                    const file = ev.dataTransfer.items[i].getAsFile();
+                    console.log('... file[' + i + '].name = ' + file.name);
+
+                    var reader = new FileReader();
+                    reader.readAsText(file);
+                    reader.onload = function() {
+                        var typeOfGeometry = turf.getType(JSON.parse(reader.result)["features"][0]);
+                        if(typeOfGeometry == "Point" || typeOfGeometry == "MultiPoint") {
+                            addPointLayerFromOperation(JSON.parse(reader.result),file.name);
+                        } else if(typeOfGeometry == "Line" || typeOfGeometry == "MultiLineString" || typeOfGeometry == "MultiLineString") {
+                            addLineLayerFromOperation(JSON.parse(reader.result),file.name);
+                        } else if(typeOfGeometry == "Polygon" || typeOfGeometry == "MultiPolygon" || typeOfGeometry == "MultiPolygons") {
+                            addPolygonLayerFromOperation(JSON.parse(reader.result),file.name);
+                        }
+                    };
+
+                    reader.onerror = function() {
+                        console.log(reader.error);
+                    };
+                }
+                }
+            } else {
+                // Use DataTransfer interface to access the file(s)
+                for (let i = 0; i < ev.dataTransfer.files.length; i++) {
+                console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+                }
+            }
+        }
+
+        function dragOverHandler(ev) {
+            console.log('File(s) in drop zone');
+
+            // Prevent default behavior (Prevent file from being opened)
+            ev.preventDefault();
+        }
+
             
         </script>
     </body>

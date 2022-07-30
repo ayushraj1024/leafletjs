@@ -41,7 +41,7 @@ plt.plot(kt.support, np.median(kt.simulations, axis=0), color='cyan',
 plt.plot(kt.support, kt.statistic, label = 'observed', color='red')
 
 # clean up labels and axes
-plt.xlabel('distance (x1000000 meters)')
+plt.xlabel('distance (x$10^5$ meters)')
 plt.ylabel('K(d)')
 plt.legend()
 #ax[0].set_xlim(0,2000)
